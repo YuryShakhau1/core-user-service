@@ -30,6 +30,7 @@ public class PaymentCardEntity extends AuditableEntity {
     @Convert(converter = EncryptStringConverter.class)
     private String number;
 
+    private String holder;
     private LocalDate expirationDate;
     private Boolean active;
 
