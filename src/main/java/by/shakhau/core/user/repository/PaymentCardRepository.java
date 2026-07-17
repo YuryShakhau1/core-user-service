@@ -13,15 +13,13 @@ public interface PaymentCardRepository extends JpaRepository<PaymentCardEntity, 
         JpaSpecificationExecutor<PaymentCardEntity> {
 
     List<PaymentCardEntity> findAllByUserId(Long userId);
-
-    @Query("SELECT pc FROM PaymentCardEntity pc JOIN FETCH pc.user WHERE pc.id = :id")
-    Optional<PaymentCardEntity> findWithUser(Long id);
+    List<PaymentCardEntity> findAllByUserIdAndActive(Long userId, Boolean active);
 
     @Modifying
     @Query("UPDATE PaymentCardEntity pc SET pc.active = :active WHERE pc.id = :id")
     void updateActiveStatus(Long id, Boolean active);
 
     @Modifying
-    @Query("UPDATE PaymentCardEntity pc SET pc.active = :active WHERE pc.userId = :userId")
+    @Query("UPDATE PaymentCardEntity pc SET pc.active = :active WHERE pc.user.id = :userId")
     void updateActiveStatusByUserId(Long userId, Boolean active);
 }
