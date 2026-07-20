@@ -5,6 +5,7 @@ import by.shakhau.core.user.controller.dto.resuest.CreatePaymentCardRequest;
 import by.shakhau.core.user.controller.dto.resuest.UpdatePaymentCardRequest;
 import by.shakhau.core.user.controller.mapper.PaymentCardDtoMapper;
 import by.shakhau.core.user.service.PaymentCardService;
+import by.shakhau.core.user.service.UserService;
 import by.shakhau.core.user.service.model.PaymentCard;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -32,6 +33,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 public class PaymentCardController {
 
     private PaymentCardDtoMapper mapper;
+    private UserService userService;
     private PaymentCardService service;
 
     @PostMapping(value = "/users/{userId}", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)

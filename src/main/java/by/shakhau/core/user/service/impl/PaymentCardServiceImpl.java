@@ -12,9 +12,14 @@ import by.shakhau.core.user.service.mapper.PaymentCardMapper;
 import by.shakhau.core.user.service.model.PaymentCard;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PutMapping;
 
 import java.util.List;
 import java.util.UUID;
@@ -30,6 +35,10 @@ public class PaymentCardServiceImpl implements PaymentCardService {
 
     @Transactional
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "user-cards", key = "#userId + '-true'"),
+            @CacheEvict(value = "user-cards", key = "#userId + '-false'"),
+            @CacheEvict(value = "user-cards", key = "#userId + '-null'") })
     public PaymentCard create(UUID userId, PaymentCard paymentCard) {
         if (paymentCard.getId() != null) {
             throw new ResourceForbiddenException("Payment card id must be null");
@@ -38,12 +47,14 @@ public class PaymentCardServiceImpl implements PaymentCardService {
         return save(userId, mapper.toEntity(paymentCard));
     }
 
+    @Cacheable(value = "payment-cards", key = "#id")
     @Override
     public PaymentCard findById(UUID id) {
         return mapper.toDomain(repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment card with id = %s not found".formatted(id))));
     }
 
+    @Cacheable(value = "user-cards", key = "#userId + '-' + #active")
     @Override
     public List<PaymentCard> findByUserId(UUID userId, Boolean active) {
         List<PaymentCardEntity> paymentCards = null;
@@ -64,6 +75,11 @@ public class PaymentCardServiceImpl implements PaymentCardService {
                 .map(u -> mapper.toDomain(u));
     }
 
+    @CachePut(value = "payment-cards", key = "#paymentCard.id")
+    @Caching(evict = {
+            @CacheEvict(value = "user-cards", key = "#userId + '-true'"),
+            @CacheEvict(value = "user-cards", key = "#userId + '-false'"),
+            @CacheEvict(value = "user-cards", key = "#userId + '-null'") })
     @Transactional
     @Override
     public PaymentCard update(UUID userId, PaymentCard paymentCard) {
@@ -80,6 +96,12 @@ public class PaymentCardServiceImpl implements PaymentCardService {
         return save(userId, paymentCardEntity);
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "payment-cards", key = "#id"),
+            @CacheEvict(value = "user-cards", key = "#userId + '-true'"),
+            @CacheEvict(value = "user-cards", key = "#userId + '-false'"),
+            @CacheEvict(value = "user-cards", key = "#userId + '-null'")
+    })
     @Transactional
     @Override
     public void updateActiveStatus(UUID id, boolean active) {

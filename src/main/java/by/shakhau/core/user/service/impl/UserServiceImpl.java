@@ -11,6 +11,9 @@ import by.shakhau.core.user.service.mapper.UserMapper;
 import by.shakhau.core.user.service.model.User;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -36,6 +39,7 @@ public class UserServiceImpl implements UserService {
         return mapper.toDomain(repository.save(mapper.toEntity(user)));
     }
 
+    @Cacheable(value = "users", key = "#id")
     @Override
     public User findById(UUID id) {
         return mapper.toDomain(repository.findById(id)
@@ -55,6 +59,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Transactional
+    @CachePut(value = "users", key = "#user.id")
     @Override
     public User update(User user) {
         if (user.getId() == null) {
@@ -70,6 +75,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Transactional
+    @CacheEvict(value = "users", key = "#id")
     @Override
     public void updateActiveStatus(UUID id, boolean active) {
         if (!active) {
