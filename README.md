@@ -55,3 +55,4 @@ DB_PASSWORD=Password
 SHOW_SQL=true
 
 CARD_SECRET_KEY=gsvhnjkblunbgfjvbcgvnhrfxcvmbjhn
+REDIS_SECRET_PASSWORD=redis_password
