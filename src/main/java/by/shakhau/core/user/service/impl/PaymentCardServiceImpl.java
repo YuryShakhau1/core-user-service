@@ -32,7 +32,7 @@ public class PaymentCardServiceImpl implements PaymentCardService {
     @Override
     public PaymentCard create(UUID userId, PaymentCard paymentCard) {
         if (paymentCard.getId() != null) {
-            throw new IllegalArgumentException("Payment card id must be null");
+            throw new ResourceForbiddenException("Payment card id must be null");
         }
 
         return save(userId, mapper.toEntity(paymentCard));
@@ -72,7 +72,7 @@ public class PaymentCardServiceImpl implements PaymentCardService {
         }
 
         PaymentCardEntity paymentCardEntity = repository.findById(paymentCard.getId())
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Payment card with id = %s not found".formatted(paymentCard.getId())));
 
         mapper.updateEntity(paymentCard, paymentCardEntity);
@@ -88,7 +88,7 @@ public class PaymentCardServiceImpl implements PaymentCardService {
 
     private PaymentCard save(UUID userId, PaymentCardEntity paymentCardEntity) {
         UserEntity userEntity = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User with id = %s not found".formatted(userId)));
+                .orElseThrow(() -> new ResourceNotFoundException("User with id = %s not found".formatted(userId)));
         paymentCardEntity.setUser(userEntity);
         return mapper.toDomain(repository.save(paymentCardEntity));
     }

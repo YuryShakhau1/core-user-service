@@ -45,7 +45,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UUID findUserIdByCardId(UUID cardId) {
         return repository.findUserIdByCardId(cardId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found by %s card id".formatted(cardId)));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found by %s card id".formatted(cardId)));
     }
 
     @Override
@@ -62,7 +62,7 @@ public class UserServiceImpl implements UserService {
         }
 
         UserEntity userEntity = repository.findById(user.getId())
-                .orElseThrow(() -> new IllegalArgumentException("User with id = %s not found".formatted(user.getId())));
+                .orElseThrow(() -> new ResourceNotFoundException("User with id = %s not found".formatted(user.getId())));
 
         mapper.updateEntity(user, userEntity);
 
