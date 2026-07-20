@@ -4,14 +4,12 @@ import by.shakhau.core.user.service.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.UUID;
-
 public interface UserService {
 
     User create(User user);
-    User findById(UUID id);
-    UUID findUserIdByCardId(UUID cardId);
+    User findById(Long id);
+    Long findUserIdByCardId(Long cardId);
     Page<User> findAll(String name, String surname, Pageable pageable);
     User update(User user);
-    void updateActiveStatus(UUID id, boolean active);
+    void updateActiveStatus(Long id, boolean active);
 }

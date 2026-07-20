@@ -5,13 +5,12 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Getter
 @Setter
 public class User {
 
-    private UUID id;
+    private Long id;
     private String name;
     private String surname;
     private LocalDate birthDate;

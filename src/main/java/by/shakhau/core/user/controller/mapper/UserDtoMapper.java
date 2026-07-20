@@ -6,12 +6,10 @@ import by.shakhau.core.user.controller.dto.resuest.UpdateUserRequest;
 import by.shakhau.core.user.service.model.User;
 import org.mapstruct.Mapper;
 
-import java.util.UUID;
-
 @Mapper(componentModel = "spring")
 public interface UserDtoMapper {
 
     GetUserResponse toGetUserResponse(User user);
     User toUser(CreateUserRequest request);
-    User toUser(UUID id, UpdateUserRequest request);
+    User toUser(UpdateUserRequest request);
 }
