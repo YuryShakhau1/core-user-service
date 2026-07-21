@@ -33,12 +33,6 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, exception, request);
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleAllExceptions(
-            Exception exception, HttpServletRequest request) {
-        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, exception, request);
-    }
-
     private ResponseEntity<ErrorResponse> buildErrorResponse(
             HttpStatus status, Exception exception, HttpServletRequest request) {
 

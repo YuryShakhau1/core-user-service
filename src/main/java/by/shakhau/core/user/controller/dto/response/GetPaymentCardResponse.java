@@ -11,6 +11,7 @@ public class GetPaymentCardResponse {
 
     private Long id;
     private String number;
+    private String holder;
     private LocalDate expirationDate;
     private Boolean active;
 }
