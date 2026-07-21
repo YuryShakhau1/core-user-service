@@ -12,4 +12,5 @@ public interface UserDtoMapper {
     GetUserResponse toGetUserResponse(User user);
     User toUser(CreateUserRequest request);
     User toUser(UpdateUserRequest request);
+    User toUser(Long id, UpdateUserRequest request);
 }

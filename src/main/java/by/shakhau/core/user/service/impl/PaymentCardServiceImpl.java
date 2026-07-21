@@ -6,6 +6,8 @@ import by.shakhau.core.user.repository.entity.PaymentCardEntity;
 import by.shakhau.core.user.repository.entity.UserEntity;
 import by.shakhau.core.user.repository.specification.PaymentCardSpecifications;
 import by.shakhau.core.user.service.PaymentCardService;
+import by.shakhau.core.user.service.exception.ResourceForbiddenException;
+import by.shakhau.core.user.service.exception.ResourceNotFoundException;
 import by.shakhau.core.user.service.mapper.PaymentCardMapper;
 import by.shakhau.core.user.service.model.PaymentCard;
 import jakarta.transaction.Transactional;
@@ -38,7 +40,8 @@ public class PaymentCardServiceImpl implements PaymentCardService {
 
     @Override
     public PaymentCard findById(UUID id) {
-        return mapper.toDomain(repository.findById(id).orElse(null));
+        return mapper.toDomain(repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Payment card with id = %s not found".formatted(id))));
     }
 
     @Override
@@ -65,7 +68,7 @@ public class PaymentCardServiceImpl implements PaymentCardService {
     @Override
     public PaymentCard update(UUID userId, PaymentCard paymentCard) {
         if (paymentCard.getId() == null) {
-            throw new IllegalArgumentException("Payment card id must not be null");
+            throw new ResourceForbiddenException("Payment card id must not be null");
         }
 
         PaymentCardEntity paymentCardEntity = repository.findById(paymentCard.getId())
