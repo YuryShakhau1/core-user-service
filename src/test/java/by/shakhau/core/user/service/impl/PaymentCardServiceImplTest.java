@@ -10,10 +10,8 @@ import by.shakhau.core.user.service.mapper.PaymentCardMapper;
 import by.shakhau.core.user.service.model.PaymentCard;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -172,8 +170,8 @@ public class PaymentCardServiceImplTest extends CommonTest {
 
     @Test
     void shouldUpdatePaymentCardWhenPaymentCardIsValid() {
+        when(repository.findById(CARD_ID)).thenReturn(Optional.of(paymentCardEntity));
         when(userRepository.findById(USER_ID)).thenReturn(Optional.of(userEntity));
-        when(mapper.toEntity(paymentCard)).thenReturn(paymentCardEntity);
         when(repository.save(paymentCardEntity)).thenReturn(paymentCardEntity);
         when(mapper.toDomain(paymentCardEntity)).thenReturn(paymentCard);
 
@@ -182,6 +180,20 @@ public class PaymentCardServiceImplTest extends CommonTest {
         assertThat(result).isEqualTo(paymentCard);
 
         verify(repository).save(paymentCardEntity);
+        verify(mapper).updateEntity(paymentCard, paymentCardEntity);
+    }
+
+    @Test
+    void shouldThrowResourceNotFoundExceptionWhenCardNotFound() {
+        when(repository.findById(CARD_ID)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.update(USER_ID, paymentCard))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage("Payment card with id = %d not found".formatted(CARD_ID));
+
+        verify(mapper, never()).updateEntity(paymentCard, paymentCardEntity);
+        verify(repository, never()).save(paymentCardEntity);
+        verify(mapper, never()).toDomain(paymentCardEntity);
     }
 
     @Test
@@ -197,11 +209,11 @@ public class PaymentCardServiceImplTest extends CommonTest {
 
     @Test
     void shouldThrowResourceNotFoundExceptionWhenUpdatingPaymentCardForUnknownUser() {
-        when(userRepository.findById(USER_ID)).thenReturn(Optional.empty());
+        when(repository.findById(CARD_ID)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.update(USER_ID, paymentCard))
                 .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessage("User with id = %d not found".formatted(USER_ID));
+                .hasMessage("Payment card with id = %d not found".formatted(CARD_ID));
 
         verify(repository, never()).save(any());
     }
