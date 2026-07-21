@@ -6,6 +6,8 @@ import by.shakhau.core.user.repository.entity.PaymentCardEntity;
 import by.shakhau.core.user.repository.entity.UserEntity;
 import by.shakhau.core.user.repository.specification.PaymentCardSpecifications;
 import by.shakhau.core.user.service.PaymentCardService;
+import by.shakhau.core.user.service.exception.ResourceForbiddenException;
+import by.shakhau.core.user.service.exception.ResourceNotFoundException;
 import by.shakhau.core.user.service.mapper.PaymentCardMapper;
 import by.shakhau.core.user.service.model.PaymentCard;
 import jakarta.transaction.Transactional;
@@ -37,7 +39,8 @@ public class PaymentCardServiceImpl implements PaymentCardService {
 
     @Override
     public PaymentCard findById(Long id) {
-        return mapper.toDomain(repository.findById(id).orElse(null));
+        return mapper.toDomain(repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Payment card with id = %d not found".formatted(id))));
     }
 
     @Override
@@ -64,11 +67,11 @@ public class PaymentCardServiceImpl implements PaymentCardService {
     @Override
     public PaymentCard update(Long userId, PaymentCard paymentCard) {
         if (paymentCard.getId() == null) {
-            throw new IllegalArgumentException("Payment card id must not be null");
+            throw new ResourceForbiddenException("Payment card id must not be null");
         }
 
         PaymentCardEntity paymentCardEntity = repository.findById(paymentCard.getId())
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Payment card with id = %d not found".formatted(paymentCard.getId())));
 
         mapper.updateEntity(paymentCard, paymentCardEntity);
@@ -84,7 +87,7 @@ public class PaymentCardServiceImpl implements PaymentCardService {
 
     private PaymentCard save(Long userId, PaymentCardEntity paymentCardEntity) {
         UserEntity userEntity = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User with id = %d not found".formatted(userId)));
+                .orElseThrow(() -> new ResourceNotFoundException("User with id = %d not found".formatted(userId)));
         paymentCardEntity.setUser(userEntity);
         return mapper.toDomain(repository.save(paymentCardEntity));
     }

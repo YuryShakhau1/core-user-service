@@ -12,4 +12,5 @@ public interface PaymentCardDtoMapper {
     GetPaymentCardResponse toGetPaymentCardResponse(PaymentCard paymentCard);
     PaymentCard toPaymentCard(CreatePaymentCardRequest request);
     PaymentCard toPaymentCard(UpdatePaymentCardRequest request);
+    PaymentCard toPaymentCard(Long id, UpdatePaymentCardRequest request);
 }
