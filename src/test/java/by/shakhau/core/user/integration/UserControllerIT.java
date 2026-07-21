@@ -3,8 +3,10 @@ package by.shakhau.core.user.integration;
 import by.shakhau.core.user.repository.UserRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -16,7 +18,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-public class UserControllerIntegrationTest extends AbstractIntegrationTest {
+class UserControllerIT extends AbstractIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -31,10 +33,10 @@ public class UserControllerIntegrationTest extends AbstractIntegrationTest {
     void shouldCreateUserWhenRequestIsValid() throws Exception {
         String request = """
                 {
-                    "name": "Ivan",
-                    "surname": "Ivanov",
+                    "name": "John",
+                    "surname": "Doe",
                     "birthDate": "1995-05-10",
-                    "email": "ivan@mail.com",
+                    "email": "john@mail.com",
                     "active": true
                 }
                 """;
@@ -46,45 +48,45 @@ public class UserControllerIntegrationTest extends AbstractIntegrationTest {
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.id").exists())
                         .andExpect(jsonPath("$.name")
-                                .value("Ivan"))
+                                .value("John"))
                         .andExpect(jsonPath("$.surname")
-                                .value("Ivanov"))
+                                .value("Doe"))
                         .andExpect(jsonPath("$.email")
-                                .value("ivan@mail.com"))
+                                .value("john@mail.com"))
+                        .andExpect(jsonPath("$.active")
+                                .value(true))
                         .andReturn()
                         .getResponse()
                         .getContentAsString();
 
         JsonNode json = objectMapper.readTree(response);
-
         Long id = json.get("id").asLong();
 
         assertThat(userRepository.findById(id)).isPresent();
     }
 
     @Test
-    void shouldReturnUserWhenUserExists() throws Exception {
+    void shouldFindUserByIdWhenUserExists() throws Exception {
         Long id = createUser();
 
-        mockMvc.perform(get("/users/{id}", id)
-                        .contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get("/users/{id}", id))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id")
                         .value(id))
                 .andExpect(jsonPath("$.name")
-                        .value("Ivan"))
-                .andExpect(jsonPath("$.surname")
-                        .value("Ivanov"));
+                        .value("John"))
+                .andExpect(jsonPath("$.email")
+                        .value("john@mail.com"));
     }
 
     @Test
     void shouldReturnNotFoundWhenUserDoesNotExist() throws Exception {
-        mockMvc.perform(get("/users/{id}", 99999L))
+        mockMvc.perform(get("/users/{id}", 999L))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    void shouldReturnUsersPageWhenUsersExist() throws Exception {
+    void shouldFindUsersWhenUsersExist() throws Exception {
         createUser();
 
         mockMvc.perform(get("/users")
@@ -94,7 +96,7 @@ public class UserControllerIntegrationTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.content")
                         .isArray())
                 .andExpect(jsonPath("$.content[0].name")
-                        .value("Ivan"));
+                        .value("John"));
     }
 
     @Test
@@ -119,22 +121,31 @@ public class UserControllerIntegrationTest extends AbstractIntegrationTest {
                         .value(id))
                 .andExpect(jsonPath("$.name")
                         .value("Petr"))
-                .andExpect(jsonPath("$.email")
-                        .value("petr@mail.com"));
+                .andExpect(jsonPath("$.surname")
+                        .value("Petrov"))
+                .andExpect(jsonPath("$.active")
+                        .value(true));
 
-        assertThat(userRepository.findById(id).get().getName())
-                .isEqualTo("Petr");
+        var user = userRepository.findById(id).orElseThrow();
+
+        assertThat(user.getName()).isEqualTo("Petr");
+        assertThat(user.getActive()).isTrue();
     }
 
     @Test
-    void shouldUpdateUserStatusWhenRequestIsValid() throws Exception {
+    void shouldUpdateUserStatusWhenActiveIsFalse() throws Exception {
         Long id = createUser();
 
-        mockMvc.perform(patch("/users/{id}", id).param("active", "false"))
+        mockMvc.perform(patch("/users/{id}", id)
+                        .param("active", "false"))
                 .andExpect(status().isNoContent());
 
-        assertThat(userRepository.findById(id).get().getActive()).isFalse();
+        assertThat(userRepository.findById(id)
+                .orElseThrow()
+                .getActive())
+                .isFalse();
     }
+
 
     @Test
     void shouldReturnBadRequestWhenCreateRequestIsInvalid() throws Exception {
@@ -157,10 +168,10 @@ public class UserControllerIntegrationTest extends AbstractIntegrationTest {
     private Long createUser() throws Exception {
         String request = """
                 {
-                    "name": "Ivan",
-                    "surname": "Ivanov",
+                    "name": "John",
+                    "surname": "Doe",
                     "birthDate": "1995-05-10",
-                    "email": "ivan@mail.com",
+                    "email": "john@mail.com",
                     "active": true
                 }
                 """;
@@ -169,6 +180,7 @@ public class UserControllerIntegrationTest extends AbstractIntegrationTest {
                 mockMvc.perform(post("/users")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(request))
+                        .andExpect(status().isOk())
                         .andReturn()
                         .getResponse()
                         .getContentAsString();

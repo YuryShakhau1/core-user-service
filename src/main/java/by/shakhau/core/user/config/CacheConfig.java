@@ -1,5 +1,9 @@
 package by.shakhau.core.user.config;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.cache.RedisCacheManagerBuilderCustomizer;
 import org.springframework.cache.annotation.EnableCaching;
@@ -24,22 +28,51 @@ public class CacheConfig {
 
     @Bean
     public RedisCacheConfiguration cacheConfiguration() {
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        objectMapper.registerModule(new JavaTimeModule());
+
+        objectMapper.activateDefaultTyping(
+                LaissezFaireSubTypeValidator.instance,
+                ObjectMapper.DefaultTyping.NON_FINAL,
+                JsonTypeInfo.As.PROPERTY
+        );
+
+        GenericJackson2JsonRedisSerializer serializer =
+                new GenericJackson2JsonRedisSerializer(objectMapper);
+
         return RedisCacheConfiguration.defaultCacheConfig()
                 .entryTtl(Duration.ofMinutes(entityTtl))
                 .disableCachingNullValues()
 
-                .serializeKeysWith(RedisSerializationContext.SerializationPair
-                        .fromSerializer(new StringRedisSerializer()))
+                .serializeKeysWith(
+                        RedisSerializationContext.SerializationPair
+                                .fromSerializer(new StringRedisSerializer())
+                )
 
-                .serializeValuesWith(RedisSerializationContext.SerializationPair
-                        .fromSerializer(new GenericJackson2JsonRedisSerializer()));
+                .serializeValuesWith(
+                        RedisSerializationContext.SerializationPair
+                                .fromSerializer(serializer)
+                );
     }
 
+
     @Bean
-    public RedisCacheManagerBuilderCustomizer redisCacheManagerBuilderCustomizer(RedisCacheConfiguration cacheConfiguration) {
-        return (builder) -> builder
-                .withCacheConfiguration("users", cacheConfiguration.entryTtl(Duration.ofMinutes(entityTtl)))
-                .withCacheConfiguration("payment-cards", cacheConfiguration.entryTtl(Duration.ofMinutes(entityTtl)))
-                .withCacheConfiguration("user-cards", cacheConfiguration.entryTtl(Duration.ofMinutes(entityTtl)));
+    public RedisCacheManagerBuilderCustomizer redisCacheManagerBuilderCustomizer(
+            RedisCacheConfiguration cacheConfiguration) {
+
+        return builder -> builder
+                .withCacheConfiguration(
+                        "users",
+                        cacheConfiguration.entryTtl(Duration.ofMinutes(entityTtl))
+                )
+                .withCacheConfiguration(
+                        "payment-cards",
+                        cacheConfiguration.entryTtl(Duration.ofMinutes(entityTtl))
+                )
+                .withCacheConfiguration(
+                        "user-cards",
+                        cacheConfiguration.entryTtl(Duration.ofMinutes(entityTtl))
+                );
     }
 }
