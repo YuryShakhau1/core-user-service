@@ -1,9 +1,7 @@
 package by.shakhau.core.user.service.mapper;
 
 import by.shakhau.core.user.repository.entity.PaymentCardEntity;
-import by.shakhau.core.user.repository.entity.UserEntity;
 import by.shakhau.core.user.service.model.PaymentCard;
-import by.shakhau.core.user.service.model.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;

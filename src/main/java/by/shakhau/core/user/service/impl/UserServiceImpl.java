@@ -5,6 +5,8 @@ import by.shakhau.core.user.repository.UserRepository;
 import by.shakhau.core.user.repository.entity.UserEntity;
 import by.shakhau.core.user.repository.specification.UserSpecifications;
 import by.shakhau.core.user.service.UserService;
+import by.shakhau.core.user.service.exception.ResourceForbiddenException;
+import by.shakhau.core.user.service.exception.ResourceNotFoundException;
 import by.shakhau.core.user.service.mapper.UserMapper;
 import by.shakhau.core.user.service.model.User;
 import jakarta.transaction.Transactional;
@@ -26,7 +28,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public User create(User user) {
         if (user.getId() != null) {
-            throw new IllegalArgumentException("User id must be null");
+            throw new ResourceForbiddenException("User id must be null");
         }
 
         return mapper.toDomain(repository.save(mapper.toEntity(user)));
@@ -34,13 +36,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User findById(Long id) {
-        return mapper.toDomain(repository.findById(id).orElse(null));
+        return mapper.toDomain(repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User with id = %d not found".formatted(id))));
     }
 
     @Override
     public Long findUserIdByCardId(Long cardId) {
         return repository.findUserIdByCardId(cardId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found by %d card id".formatted(cardId)));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found by %d card id".formatted(cardId)));
     }
 
     @Override
@@ -53,11 +56,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public User update(User user) {
         if (user.getId() == null) {
-            throw new IllegalArgumentException("User id must not be null");
+            throw new ResourceForbiddenException("User id must not be null");
         }
 
         UserEntity userEntity = repository.findById(user.getId())
-                .orElseThrow(() -> new IllegalArgumentException("User with id = %d not found".formatted(user.getId())));
+                .orElseThrow(() -> new ResourceNotFoundException("User with id = %d not found".formatted(user.getId())));
 
         mapper.updateEntity(user, userEntity);
 
