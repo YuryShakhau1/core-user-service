@@ -31,7 +31,7 @@ public class PaymentCardServiceImpl implements PaymentCardService {
     @Override
     public PaymentCard create(Long userId, PaymentCard paymentCard) {
         if (paymentCard.getId() != null) {
-            throw new IllegalArgumentException("Payment card id must be null");
+            throw new ResourceForbiddenException("Payment card id must be null");
         }
 
         return save(userId, mapper.toEntity(paymentCard));
