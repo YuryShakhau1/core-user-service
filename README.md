@@ -6,12 +6,13 @@ The microservice application processes operations with users and user payment ca
 
 ## Environment variables
 
-| Variable      | Type    | Desription                                                      |
-|---------------|---------|-----------------------------------------------------------------| 
-| `DB_NAME`     | String  | Database schema name                                            |
-| `DB_USERNAME` | String  | Database user name                                              |
-| `DB_PASSWORD` | String  | Database user password                                          |
-| `SHOW_SQL`    | Boolean | Not mandatory parameter to allow show sql queries in debug only |
+| Variable                | Type    | Desription                                                         |
+|-------------------------|---------|--------------------------------------------------------------------| 
+| `DB_NAME`               | String  | Database schema name                                               |
+| `DB_USERNAME`           | String  | Database user name                                                 |
+| `DB_PASSWORD`           | String  | Database user password                                             |
+| `SHOW_SQL`              | Boolean | Not mandatory parameter to allow show sql queries in debug only    |
+| `REDIS_SECRET_PASSWORD` | String  | 32 symblos secret password to encrypt/dercypt paymane card numbers |
 
 ### Table `users`
 
