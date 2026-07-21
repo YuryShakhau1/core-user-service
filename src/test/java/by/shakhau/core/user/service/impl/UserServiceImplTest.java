@@ -9,10 +9,8 @@ import by.shakhau.core.user.service.mapper.UserMapper;
 import by.shakhau.core.user.service.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -47,19 +45,19 @@ public class UserServiceImplTest extends CommonTest {
     private UserServiceImpl service;
 
     private User user;
-    private UserEntity entity;
+    private UserEntity userEntity;
 
     @BeforeEach
     public void setUp() {
         user = new User();
-        user.setId(1L);
+        user.setId(USER_ID);
         user.setName(USER_NAME);
         user.setSurname(USER_SURNAME);
 
-        entity = new UserEntity();
-        entity.setId(1L);
-        entity.setName(USER_NAME);
-        entity.setSurname(USER_SURNAME);
+        userEntity = new UserEntity();
+        userEntity.setId(USER_ID);
+        userEntity.setName(USER_NAME);
+        userEntity.setSurname(USER_SURNAME);
     }
 
     @Test
@@ -68,8 +66,8 @@ public class UserServiceImplTest extends CommonTest {
         var entityToSave = new UserEntity();
 
         when(mapper.toEntity(newUser)).thenReturn(entityToSave);
-        when(repository.save(entityToSave)).thenReturn(entity);
-        when(mapper.toDomain(entity)).thenReturn(user);
+        when(repository.save(entityToSave)).thenReturn(userEntity);
+        when(mapper.toDomain(userEntity)).thenReturn(user);
 
         User result = service.create(newUser);
 
@@ -77,7 +75,7 @@ public class UserServiceImplTest extends CommonTest {
 
         verify(mapper).toEntity(newUser);
         verify(repository).save(entityToSave);
-        verify(mapper).toDomain(entity);
+        verify(mapper).toDomain(userEntity);
     }
 
     @Test
@@ -95,15 +93,15 @@ public class UserServiceImplTest extends CommonTest {
 
     @Test
     void shouldReturnUserWhenUserExists() {
-        when(repository.findById(USER_ID)).thenReturn(Optional.of(entity));
-        when(mapper.toDomain(entity)).thenReturn(user);
+        when(repository.findById(USER_ID)).thenReturn(Optional.of(userEntity));
+        when(mapper.toDomain(userEntity)).thenReturn(user);
 
         User result = service.findById(USER_ID);
 
         assertThat(result).isEqualTo(user);
 
         verify(repository).findById(USER_ID);
-        verify(mapper).toDomain(entity);
+        verify(mapper).toDomain(userEntity);
     }
 
     @Test
@@ -144,10 +142,10 @@ public class UserServiceImplTest extends CommonTest {
     void shouldReturnPageOfUsersWhenUsersExist() {
         Pageable pageable = PageRequest.of(0, 10);
 
-        Page<UserEntity> entityPage = new PageImpl<>(List.of(entity));
+        Page<UserEntity> entityPage = new PageImpl<>(List.of(userEntity));
 
         when(repository.findAll(any(Specification.class), eq(pageable))).thenReturn(entityPage);
-        when(mapper.toDomain(entity)).thenReturn(user);
+        when(mapper.toDomain(userEntity)).thenReturn(user);
 
         Page<User> result = service.findAll(USER_NAME, USER_SURNAME, pageable);
 
@@ -155,22 +153,35 @@ public class UserServiceImplTest extends CommonTest {
         assertThat(result.getTotalElements()).isEqualTo(1);
 
         verify(repository).findAll(any(Specification.class), eq(pageable));
-        verify(mapper).toDomain(entity);
+        verify(mapper).toDomain(userEntity);
     }
 
     @Test
     void shouldUpdateUserWhenUserIsValid() {
-        when(mapper.toEntity(user)).thenReturn(entity);
-        when(repository.save(entity)).thenReturn(entity);
-        when(mapper.toDomain(entity)).thenReturn(user);
+        when(repository.findById(USER_ID)).thenReturn(Optional.of(userEntity));
+        when(repository.save(userEntity)).thenReturn(userEntity);
+        when(mapper.toDomain(userEntity)).thenReturn(user);
 
         User result = service.update(user);
 
         assertThat(result).isEqualTo(user);
 
-        verify(mapper).toEntity(user);
-        verify(repository).save(entity);
-        verify(mapper).toDomain(entity);
+        verify(mapper).updateEntity(user, userEntity);
+        verify(repository).save(userEntity);
+        verify(mapper).toDomain(userEntity);
+    }
+
+    @Test
+    void shouldThrowResourceNotFoundExceptionWhenUserNotFound() {
+        when(repository.findById(USER_ID)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.update(user))
+                .isInstanceOf(ResourceNotFoundException.class)
+                        .hasMessage("User with id = %d not found".formatted(USER_ID));
+
+        verify(mapper, never()).updateEntity(user, userEntity);
+        verify(repository, never()).save(userEntity);
+        verify(mapper, never()).toDomain(userEntity);
     }
 
     @Test
