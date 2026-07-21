@@ -1,0 +1,91 @@
+package by.shakhau.core.user.service.impl;
+
+import by.shakhau.core.user.repository.PaymentCardRepository;
+import by.shakhau.core.user.repository.UserRepository;
+import by.shakhau.core.user.repository.entity.PaymentCardEntity;
+import by.shakhau.core.user.repository.entity.UserEntity;
+import by.shakhau.core.user.repository.specification.PaymentCardSpecifications;
+import by.shakhau.core.user.service.PaymentCardService;
+import by.shakhau.core.user.service.mapper.PaymentCardMapper;
+import by.shakhau.core.user.service.model.PaymentCard;
+import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@AllArgsConstructor
+public class PaymentCardServiceImpl implements PaymentCardService {
+
+    private PaymentCardMapper mapper;
+    private PaymentCardRepository repository;
+    private UserRepository userRepository;
+
+    @Transactional
+    @Override
+    public PaymentCard create(Long userId, PaymentCard paymentCard) {
+        if (paymentCard.getId() != null) {
+            throw new IllegalArgumentException("Payment card id must be null");
+        }
+
+        return save(userId, mapper.toEntity(paymentCard));
+    }
+
+    @Override
+    public PaymentCard findById(Long id) {
+        return mapper.toDomain(repository.findById(id).orElse(null));
+    }
+
+    @Override
+    public List<PaymentCard> findByUserId(Long userId, Boolean active) {
+        List<PaymentCardEntity> paymentCards = null;
+        if (active != null) {
+            paymentCards = repository.findAllByUserIdAndActive(userId, active);
+        } else {
+            paymentCards = repository.findAllByUserId(userId);
+        }
+
+        return paymentCards.stream()
+                .map(pc -> mapper.toDomain(pc))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<PaymentCard> findAll(String name, String surname, Pageable pageable) {
+        return repository.findAll(PaymentCardSpecifications.withFilters(name, surname), pageable)
+                .map(u -> mapper.toDomain(u));
+    }
+
+    @Transactional
+    @Override
+    public PaymentCard update(Long userId, PaymentCard paymentCard) {
+        if (paymentCard.getId() == null) {
+            throw new IllegalArgumentException("Payment card id must not be null");
+        }
+
+        PaymentCardEntity paymentCardEntity = repository.findById(paymentCard.getId())
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Payment card with id = %d not found".formatted(paymentCard.getId())));
+
+        mapper.updateEntity(paymentCard, paymentCardEntity);
+
+        return save(userId, paymentCardEntity);
+    }
+
+    @Transactional
+    @Override
+    public void updateActiveStatus(Long id, boolean active) {
+        repository.updateActiveStatus(id, active);
+    }
+
+    private PaymentCard save(Long userId, PaymentCardEntity paymentCardEntity) {
+        UserEntity userEntity = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User with id = %d not found".formatted(userId)));
+        paymentCardEntity.setUser(userEntity);
+        return mapper.toDomain(repository.save(paymentCardEntity));
+    }
+}
