@@ -1,23 +1,12 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/${DB_NAME:user_db}
-    username: ${DB_USERNAME:Username}
-    password: ${DB_PASSWORD:Password}
     driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate.ddl-auto: none
-    show-sql: ${SHOW_SQL:false}
     properties:
       hibernate:
         format_sql: true
-
-  data:
-    redis:
-      host: localhost
-      port: 6379
-      password: ${REDIS_SECRET_PASSWORD:redis_test_password}
-      entity-ttl: 60
 
   liquibase:
     change-log: classpath:/db/changelog/db.changelog-master.yml
@@ -27,4 +16,4 @@ spring:
     import: optional:file:.env[.properties]
 
 crypto:
-  card-secret-key: "${CARD_SECRET_KEY:hfdgchtxbfjvyubjvdsfsdgfdfhgjegj}"
+  card-secret-key: "${CARD_SECRET_KEY}"
