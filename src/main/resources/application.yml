@@ -21,6 +21,3 @@ spring:
 
   config:
     import: optional:file:.env[.properties]
-
-crypto:
-  card-secret-key: "${CARD_SECRET_KEY}"
