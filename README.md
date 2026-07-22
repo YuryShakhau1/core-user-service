@@ -12,7 +12,8 @@ The microservice application processes operations with users and user payment ca
 | `DB_USERNAME`           | String  | Database user name                                                 |
 | `DB_PASSWORD`           | String  | Database user password                                             |
 | `SHOW_SQL`              | Boolean | Not mandatory parameter to allow show sql queries in debug only    |
-| `REDIS_SECRET_PASSWORD` | String  | 32 symblos secret password to encrypt/dercypt paymane card numbers |
+| `CARD_SECRET_KEY`       | Boolean | 32 symblos secret password to encrypt/dercypt payment card numbers |
+| `REDIS_SECRET_PASSWORD` | String  | Redis password                                                     |
 
 ### Table `users`
 
@@ -55,5 +56,23 @@ DB_PASSWORD=Password
 
 SHOW_SQL=true
 
-CARD_SECRET_KEY=gsvhnjkblunbgfjvbcgvnhrfxcvmbjhn
+CARD_SECRET_KEY=gsvhnjkblunbgfjvbcgvnhrfxcvmbjhn  
 REDIS_SECRET_PASSWORD=redis_password
+
+## Application docker-compose example
+
+```yaml
+version: '3.8'
+services:
+  core-user-service:
+    image: ghcr.io/yuryshakhau1/core-user-service:latest
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - DB_NAME=user_db
+      - DB_USERNAME=user_name
+      - DB_PASSWORD=user_password
+      - REDIS_SECRET_PASSWORD=redis_password
+      - CARD_SECRET_KEY=32symbols_payment_card_secretkey
+```

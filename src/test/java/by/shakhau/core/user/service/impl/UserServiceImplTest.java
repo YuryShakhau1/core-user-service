@@ -30,7 +30,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class UserServiceImplTest extends CommonTest {
+class UserServiceImplTest extends CommonUtil {
 
     @Mock
     private UserMapper mapper;

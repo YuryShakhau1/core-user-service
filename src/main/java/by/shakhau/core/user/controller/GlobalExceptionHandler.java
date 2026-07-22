@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -37,7 +38,7 @@ public class GlobalExceptionHandler {
             HttpStatus status, Exception exception, HttpServletRequest request) {
 
         ErrorResponse errorResponse = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
+                .timestamp(LocalDateTime.now(ZoneOffset.UTC))
                 .status(status.value())
                 .error(status.getReasonPhrase())
                 .message(exception.getMessage())

@@ -21,7 +21,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -64,7 +63,7 @@ public class PaymentCardServiceImpl implements PaymentCardService {
 
         return paymentCards.stream()
                 .map(pc -> mapper.toDomain(pc))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override

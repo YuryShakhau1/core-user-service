@@ -6,7 +6,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Random;
 
 @ExtendWith(MockitoExtension.class)
-public class CommonTest {
+public class CommonUtil {
 
     private static final Random RANDOM = new Random();
 
