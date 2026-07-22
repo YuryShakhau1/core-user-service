@@ -7,7 +7,6 @@ spring:
     url: jdbc:postgresql://localhost:5432/${DB_NAME:user_db}
     username: ${DB_USERNAME:Username}
     password: ${DB_PASSWORD:Password}
-    driver-class-name: org.postgresql.Driver
 
   data:
     redis:
@@ -21,3 +20,7 @@ spring:
 
 crypto:
   card-secret-key: "${CARD_SECRET_KEY:hfdgchtxbfjvyubjvdsfsdgfdfhgjegj}"
+
+logging:
+  level:
+    root: DEBUG

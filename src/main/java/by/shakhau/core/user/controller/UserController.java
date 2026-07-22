@@ -30,8 +30,8 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @AllArgsConstructor
 public class UserController {
 
-    private UserDtoMapper mapper;
-    private UserService service;
+    private final UserDtoMapper mapper;
+    private final UserService service;
 
     @PostMapping(consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<GetUserResponse> createUser(@Valid @RequestBody CreateUserRequest request) {

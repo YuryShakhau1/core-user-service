@@ -12,7 +12,8 @@ The microservice application processes operations with users and user payment ca
 | `DB_USERNAME`           | String  | Database user name                                                 |
 | `DB_PASSWORD`           | String  | Database user password                                             |
 | `SHOW_SQL`              | Boolean | Not mandatory parameter to allow show sql queries in debug only    |
-| `REDIS_SECRET_PASSWORD` | String  | 32 symblos secret password to encrypt/dercypt paymane card numbers |
+| `CARD_SECRET_KEY`       | Boolean | 32 symblos secret password to encrypt/dercypt payment card numbers |
+| `REDIS_SECRET_PASSWORD` | String  | Redis password                                                     |
 
 ### Table `users`
 
@@ -55,5 +56,65 @@ DB_PASSWORD=Password
 
 SHOW_SQL=true
 
-CARD_SECRET_KEY=gsvhnjkblunbgfjvbcgvnhrfxcvmbjhn
+CARD_SECRET_KEY=gsvhnjkblunbgfjvbcgvnhrfxcvmbjhn  
+REDIS_SECRET_PASSWORD=redis_password
+
+## Application docker-compose
+
+docker-compose example
+
+```yaml
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: postgres_container
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  redis:
+    image: redis:8.8-alpine
+    container_name: microservice-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass ${REDIS_SECRET_PASSWORD}
+    volumes:
+      - redis_data:/data
+    restart: always
+
+  core-user-service:
+    image: ghcr.io/yuryshakhau1/core-user-service:latest
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_NAME=${DB_NAME}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - REDIS_SECRET_PASSWORD=${REDIS_SECRET_PASSWORD}
+      - CARD_SECRET_KEY=${CARD_SECRET_KEY}
+
+volumes:
+  postgres_data:
+  redis_data:
+```
+
+Don't forget create .env file in the same place
+
+DB_NAME=user_db  
+DB_USERNAME=db_username  
+DB_PASSWORD=db_password
+
+CARD_SECRET_KEY=32encryption_symbolds_secret_key
 REDIS_SECRET_PASSWORD=redis_password

@@ -32,9 +32,9 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @AllArgsConstructor
 public class PaymentCardController {
 
-    private PaymentCardDtoMapper mapper;
-    private UserService userService;
-    private PaymentCardService service;
+    private final PaymentCardDtoMapper mapper;
+    private final UserService userService;
+    private final PaymentCardService service;
 
     @PostMapping(value = "/users/{userId}", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<GetPaymentCardResponse> createPaymentCard(

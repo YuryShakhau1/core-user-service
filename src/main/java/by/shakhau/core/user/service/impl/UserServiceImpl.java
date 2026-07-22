@@ -24,8 +24,8 @@ import java.util.UUID;
 @AllArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    private UserMapper mapper;
-    private UserRepository repository;
+    private final UserMapper mapper;
+    private final UserRepository repository;
 
     private PaymentCardRepository paymentCardRepository;
 
