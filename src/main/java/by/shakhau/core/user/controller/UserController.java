@@ -21,6 +21,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.UUID;
+
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
@@ -38,7 +40,7 @@ public class UserController {
     }
 
     @GetMapping(value = "/{id}", produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<GetUserResponse> findUser(@PathVariable Long id) {
+    public ResponseEntity<GetUserResponse> findUser(@PathVariable UUID id) {
         User user = service.findById(id);
         return ResponseEntity.ok(mapper.toGetUserResponse(user));
     }
@@ -54,7 +56,7 @@ public class UserController {
 
     @PutMapping(value = "/{id}", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<GetUserResponse> updateUser(
-            @PathVariable Long id,
+            @PathVariable UUID id,
             @Valid
             @RequestBody UpdateUserRequest request) {
         User user = service.update(mapper.toUser(id, request));
@@ -62,7 +64,7 @@ public class UserController {
     }
 
     @PatchMapping(value = "/{id}")
-    public ResponseEntity<Void> updateUserStatus(@PathVariable Long id, @RequestParam Boolean active) {
+    public ResponseEntity<Void> updateUserStatus(@PathVariable UUID id, @RequestParam Boolean active) {
         service.updateActiveStatus(id, active);
         return ResponseEntity.noContent().build();
     }
