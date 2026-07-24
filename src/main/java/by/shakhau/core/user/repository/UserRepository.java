@@ -12,8 +12,11 @@ import java.util.UUID;
 public interface UserRepository extends JpaRepository<UserEntity, UUID>,
         JpaSpecificationExecutor<UserEntity> {
 
-    @Query(value = "SELECT pc.user.id FROM PaymentCardEntity pc WHERE pc.id = :cardId")
+    @Query("SELECT pc.user.id FROM PaymentCardEntity pc WHERE pc.id = :cardId")
     Optional<UUID> findUserIdByCardId(UUID cardId);
+
+    @Query("SELECT u.id FROM UserEntity u WHERE u.email = :email")
+    Optional<UUID> findIdByEmail(String email);
 
     @Modifying
     @Query("UPDATE UserEntity u SET u.active = :active WHERE u.id = :id")

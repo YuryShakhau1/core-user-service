@@ -65,6 +65,7 @@ class UserServiceImplTest extends CommonUtil {
         var newUser = new User();
         var entityToSave = new UserEntity();
 
+        when(repository.findIdByEmail(user.getEmail())).thenReturn(Optional.empty());
         when(mapper.toEntity(newUser)).thenReturn(entityToSave);
         when(repository.save(entityToSave)).thenReturn(userEntity);
         when(mapper.toDomain(userEntity)).thenReturn(user);
@@ -73,8 +74,28 @@ class UserServiceImplTest extends CommonUtil {
 
         assertThat(result).isEqualTo(user);
 
+        verify(repository).findIdByEmail(user.getEmail());
         verify(mapper).toEntity(newUser);
         verify(repository).save(entityToSave);
+        verify(mapper).toDomain(userEntity);
+    }
+
+    @Test
+    void shouldUpdateUserWhenUserIdValidAndExists() {
+        var newUser = new User();
+        var entityToSave = new UserEntity();
+
+        when(repository.findIdByEmail(user.getEmail())).thenReturn(Optional.of(USER_ID));
+        when(repository.findById(USER_ID)).thenReturn(Optional.of(userEntity));
+        when(repository.save(entityToSave)).thenReturn(userEntity);
+        when(mapper.toDomain(userEntity)).thenReturn(user);
+
+        User result = service.create(newUser);
+
+        assertThat(result).isEqualTo(user);
+
+        verify(mapper).updateEntity(user, userEntity);
+        verify(repository).save(userEntity);
         verify(mapper).toDomain(userEntity);
     }
 

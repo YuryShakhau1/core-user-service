@@ -36,7 +36,12 @@ public class UserServiceImpl implements UserService {
             throw new ResourceForbiddenException("User id must be null");
         }
 
-        return mapper.toDomain(repository.save(mapper.toEntity(user)));
+        return repository.findIdByEmail(user.getEmail())
+                .map(uid -> {
+                    user.setId(uid);
+                    return update(user);
+                })
+                .orElseGet(() -> mapper.toDomain(repository.save(mapper.toEntity(user))));
     }
 
     @Cacheable(value = "users", key = "#id")

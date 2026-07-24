@@ -5,7 +5,7 @@ on:
     branches:
       - main
       - dev
-      - 'feat-*'
+      - 'feat-ci*'
 
 jobs:
   build-test-analysis:

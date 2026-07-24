@@ -1,12 +1,15 @@
+server:
+  port: ${USER_SERVICE_PORT}
+
 spring:
   config:
     activate:
       on-profile: docker
 
   datasource:
-    url: jdbc:postgresql://postgres:5432/${DB_NAME}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: jdbc:postgresql://postgres:${USER_SERVICE_DB_PORT}/${USER_SERVICE_DB_NAME}
+    username: ${USER_SERVICE_DB_USERNAME}
+    password: ${USER_SERVICE_DB_PASSWORD}
 
   data:
     redis:

@@ -1,16 +1,16 @@
 services:
-  postgres:
+  user-service-db:
     image: postgres:18-alpine
-    container_name: postgres_container
+    container_name: user_service_postgres
     environment:
-      - POSTGRES_DB=${DB_NAME}
-      - POSTGRES_USER=${DB_USERNAME}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${USER_SERVICE_DB_NAME}
+      - POSTGRES_USER=${USER_SERVICE_DB_USERNAME}
+      - POSTGRES_PASSWORD=${USER_SERVICE_DB_PASSWORD}
       - PGDATA=/var/lib/postgresql/data/pgdata
     ports:
-      - "5432:5432"
+      - "${USER_SERVICE_DB_PORT}:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - user_service_postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 10s
@@ -29,5 +29,5 @@ services:
     restart: always
 
 volumes:
-  postgres_data:
+  user_service_postgres_data:
   redis_data:

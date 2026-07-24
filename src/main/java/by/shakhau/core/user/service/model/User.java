@@ -1,5 +1,6 @@
 package by.shakhau.core.user.service.model;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -9,6 +10,7 @@ import java.util.UUID;
 
 @Getter
 @Setter
+@EqualsAndHashCode(of = { "email" }, callSuper = false)
 public class User {
 
     private UUID id;

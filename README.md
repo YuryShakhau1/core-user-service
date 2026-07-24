@@ -6,14 +6,18 @@ The microservice application processes operations with users and user payment ca
 
 ## Environment variables
 
-| Variable                | Type    | Desription                                                         |
-|-------------------------|---------|--------------------------------------------------------------------| 
-| `DB_NAME`               | String  | Database schema name                                               |
-| `DB_USERNAME`           | String  | Database user name                                                 |
-| `DB_PASSWORD`           | String  | Database user password                                             |
-| `SHOW_SQL`              | Boolean | Not mandatory parameter to allow show sql queries in debug only    |
-| `CARD_SECRET_KEY`       | Boolean | 32 symblos secret password to encrypt/dercypt payment card numbers |
-| `REDIS_SECRET_PASSWORD` | String  | Redis password                                                     |
+| Variable                   | Type    | Desription                                                         |
+|----------------------------|---------|--------------------------------------------------------------------| 
+| `USER_SERVICE_DB_NAME`     | String  | Database schema name                                               |
+| `USER_SERVICE_DB_PORT`     | String  | Database port                                                      |
+| `USER_SERVICE_DB_USERNAME` | String  | Database user name                                                 |
+| `USER_SERVICE_DB_PASSWORD` | String  | Database user password                                             |
+| `SHOW_SQL`                 | Boolean | Not mandatory parameter to allow show sql queries in debug only    |
+| `CARD_SECRET_KEY`          | Boolean | 32 symblos secret password to encrypt/dercypt payment card numbers |
+| `REDIS_SECRET_PASSWORD`    | String  | Redis password                                                     |
+
+
+## Tables
 
 ### Table `users`
 
@@ -27,6 +31,7 @@ The microservice application processes operations with users and user payment ca
 | `active`     | BOOLEAN       | NOT NULL                |
 | `created_at` | TIMESTAMP     | NOT NULL                |
 | `updated_at` | TIMESTAMP     | NOT NULL                |
+
 
 ### Table `payment_cards`
 
@@ -50,9 +55,14 @@ Before debugging create .env file with project properties.
 
 The property file example:
 
-DB_NAME=user_db  
-DB_USERNAME=Username  
-DB_PASSWORD=Password
+USER_SERVICE_PORT=8080
+
+USER_SERVICE_DB_NAME=user_db
+USER_SERVICE_DB_USERNAME=Username
+USER_SERVICE_DB_PASSWORD=Password
+USER_SERVICE_DB_PORT=5432
+
+KAFKA_HOST_POST=localhost:9092
 
 SHOW_SQL=true
 
@@ -69,12 +79,12 @@ services:
     image: postgres:18-alpine
     container_name: postgres_container
     environment:
-      - POSTGRES_DB=${DB_NAME}
-      - POSTGRES_USER=${DB_USERNAME}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${USER_SERVICE_DB_NAME}
+      - POSTGRES_USER=${USER_SERVICE_DB_USERNAME}
+      - POSTGRES_PASSWORD=${USER_SERVICE_DB_PASSWORD}
       - PGDATA=/var/lib/postgresql/data/pgdata
     ports:
-      - "5432:5432"
+      - "${USER_SERVICE_DB_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -99,7 +109,9 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - DB_NAME=${DB_NAME}
+      - USER_SERVICE_PORT=${USER_SERVICE_PORT}
+      - USER_SERVICE_DB_NAME=${USER_SERVICE_DB_NAME}
+      - USER_SERVICE_DB_PORT=${USER_SERVICE_DB_PORT}
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
       - REDIS_SECRET_PASSWORD=${REDIS_SECRET_PASSWORD}

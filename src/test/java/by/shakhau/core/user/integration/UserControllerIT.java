@@ -47,14 +47,11 @@ class UserControllerIT extends AbstractIntegrationTest {
                                 .content(request))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.id").exists())
-                        .andExpect(jsonPath("$.name")
-                                .value("John"))
-                        .andExpect(jsonPath("$.surname")
-                                .value("Doe"))
-                        .andExpect(jsonPath("$.email")
-                                .value("john@mail.com"))
-                        .andExpect(jsonPath("$.active")
-                                .value(true))
+                        .andExpect(jsonPath("$.name").value("John"))
+                        .andExpect(jsonPath("$.surname").value("Doe"))
+                        .andExpect(jsonPath("$.birthDate").value("1995-05-10"))
+                        .andExpect(jsonPath("$.email").value("john@mail.com"))
+                        .andExpect(jsonPath("$.active").value(true))
                         .andReturn()
                         .getResponse()
                         .getContentAsString();
@@ -66,17 +63,49 @@ class UserControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    void shouldUpdateUserByEmailWhenUserAlreadyCreated() throws Exception {
+        UUID id = createUser();
+
+        String request = """
+                {
+                    "name": "John2",
+                    "surname": "Doe2",
+                    "birthDate": "1990-01-02",
+                    "email": "john@mail.com",
+                    "active": true
+                }
+                """;
+
+        String response =
+                mockMvc.perform(post("/users")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(request))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.id").value(id.toString()))
+                        .andExpect(jsonPath("$.name").value("John2"))
+                        .andExpect(jsonPath("$.surname").value("Doe2"))
+                        .andExpect(jsonPath("$.birthDate").value("1990-01-02"))
+                        .andExpect(jsonPath("$.email").value("john@mail.com"))
+                        .andExpect(jsonPath("$.active").value(true))
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
+
+        JsonNode json = objectMapper.readTree(response);
+        UUID userId = UUID.fromString(json.get("id").asText());
+
+        assertThat(userRepository.findById(userId)).isPresent();
+    }
+
+    @Test
     void shouldFindUserByIdWhenUserExists() throws Exception {
         UUID id = createUser();
 
         mockMvc.perform(get("/users/{id}", id))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id")
-                        .value(id.toString()))
-                .andExpect(jsonPath("$.name")
-                        .value("John"))
-                .andExpect(jsonPath("$.email")
-                        .value("john@mail.com"));
+                .andExpect(jsonPath("$.id").value(id.toString()))
+                .andExpect(jsonPath("$.name").value("John"))
+                .andExpect(jsonPath("$.email").value("john@mail.com"));
     }
 
     @Test
@@ -93,10 +122,8 @@ class UserControllerIT extends AbstractIntegrationTest {
                         .param("page", "0")
                         .param("size", "10"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content")
-                        .isArray())
-                .andExpect(jsonPath("$.content[0].name")
-                        .value("John"));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].name").value("John"));
     }
 
     @Test
@@ -117,14 +144,10 @@ class UserControllerIT extends AbstractIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(request))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id")
-                        .value(id.toString()))
-                .andExpect(jsonPath("$.name")
-                        .value("Petr"))
-                .andExpect(jsonPath("$.surname")
-                        .value("Petrov"))
-                .andExpect(jsonPath("$.active")
-                        .value(true));
+                .andExpect(jsonPath("$.id").value(id.toString()))
+                .andExpect(jsonPath("$.name").value("Petr"))
+                .andExpect(jsonPath("$.surname").value("Petrov"))
+                .andExpect(jsonPath("$.active").value(true));
 
         var user = userRepository.findById(id).orElseThrow();
 

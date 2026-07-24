@@ -1,12 +1,15 @@
+server:
+  port: ${USER_SERVICE_PORT}
+
 spring:
   config:
     activate:
       on-profile: local
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/${DB_NAME:user_db}
-    username: ${DB_USERNAME:Username}
-    password: ${DB_PASSWORD:Password}
+    url: jdbc:postgresql://localhost:${USER_SERVICE_DB_PORT}/${DB_NAME:user_db}
+    username: ${USER_SERVICE_DB_USERNAME:Username}
+    password: ${USER_SERVICE_DB_PASSWORD:Password}
 
   data:
     redis:
