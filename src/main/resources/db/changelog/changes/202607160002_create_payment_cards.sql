@@ -1,6 +1,6 @@
 CREATE TABLE payment_cards
 (
-    id              BIGSERIAL PRIMARY KEY,
+    id              UUID PRIMARY KEY,
     user_id         BIGINT    NOT NULL,
     number          VARCHAR(255),
     holder          VARCHAR(100),

@@ -1,6 +1,6 @@
 CREATE TABLE users
 (
-    id         BIGSERIAL PRIMARY KEY,
+    id         UUID PRIMARY KEY,
     name       VARCHAR(50)  NOT NULL,
     surname    VARCHAR(50)  NOT NULL,
     birth_date DATE         NOT NULL,
