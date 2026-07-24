@@ -53,3 +53,5 @@ DB_USERNAME=Username
 DB_PASSWORD=Password
 
 SHOW_SQL=true
+
+CARD_SECRET_KEY=gsvhnjkblunbgfjvbcgvnhrfxcvmbjhn

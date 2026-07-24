@@ -3,3 +3,5 @@ databaseChangeLog:
       file: db/changelog/changes/202607160001_create_users.sql
   - include:
       file: db/changelog/changes/202607160002_create_payment_cards.sql
+  - include:
+      file: db/changelog/changes/202607170002_create_payment_cards_trigger_max_user_cradrs_is_5.sql

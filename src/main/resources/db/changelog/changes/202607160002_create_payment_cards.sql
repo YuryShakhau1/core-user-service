@@ -1,7 +1,7 @@
 CREATE TABLE payment_cards
 (
     id              UUID PRIMARY KEY,
-    user_id         BIGINT    NOT NULL,
+    user_id         UUID    NOT NULL,
     number          VARCHAR(255),
     holder          VARCHAR(100),
     expiration_date DATE      NOT NULL,
