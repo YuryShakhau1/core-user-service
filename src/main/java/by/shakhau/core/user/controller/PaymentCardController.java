@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
@@ -37,7 +38,7 @@ public class PaymentCardController {
 
     @PostMapping(value = "/users/{userId}", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<GetPaymentCardResponse> createPaymentCard(
-            @PathVariable Long userId,
+            @PathVariable UUID userId,
             @Valid
             @RequestBody CreatePaymentCardRequest request) {
         PaymentCard paymentCard = service.create(userId, mapper.toPaymentCard(request));
@@ -45,14 +46,14 @@ public class PaymentCardController {
     }
 
     @GetMapping(value = "/{id}", produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<GetPaymentCardResponse> findPaymentCard(@PathVariable Long id) {
+    public ResponseEntity<GetPaymentCardResponse> findPaymentCard(@PathVariable UUID id) {
         PaymentCard paymentCard = service.findById(id);
         return ResponseEntity.ok(mapper.toGetPaymentCardResponse(paymentCard));
     }
 
     @GetMapping(value = "/users/{userId}", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<List<GetPaymentCardResponse>> findPaymentCardByUserId(
-            @PathVariable Long userId,
+            @PathVariable UUID userId,
             @RequestParam(required = false) Boolean active) {
         List<GetPaymentCardResponse> paymentCards = service.findByUserId(userId, active).stream()
                 .map(mapper::toGetPaymentCardResponse)
@@ -71,8 +72,8 @@ public class PaymentCardController {
 
     @PutMapping(value = "/{id}/users/{userId}", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<GetPaymentCardResponse> updatePaymentCard(
-            @PathVariable Long id,
-            @PathVariable Long userId,
+            @PathVariable UUID id,
+            @PathVariable UUID userId,
             @Valid
             @RequestBody UpdatePaymentCardRequest request) {
         PaymentCard paymentCard = service.update(userId, mapper.toPaymentCard(id, request));
@@ -80,9 +81,10 @@ public class PaymentCardController {
     }
 
     @PatchMapping(value = "/{id}/status")
-    public ResponseEntity<Void> updatePaymentCardStatus(@PathVariable Long id, @RequestParam Boolean active) {
-        Long userId = userService.findUserIdByCardId(id);
-        service.updateActiveStatus(userId, id, active);
+    public ResponseEntity<Void> updatePaymentCardStatus(
+            @PathVariable UUID id, @RequestParam Boolean active) {
+        UUID userId = userService.findUserIdByCardId(id);
+        service.updateActiveStatus(id, userId, active);
         return ResponseEntity.noContent().build();
     }
 }

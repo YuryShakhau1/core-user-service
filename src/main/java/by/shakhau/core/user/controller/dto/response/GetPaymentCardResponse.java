@@ -1,17 +1,12 @@
 package by.shakhau.core.user.controller.dto.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
 import java.time.LocalDate;
+import java.util.UUID;
 
-@AllArgsConstructor
-@Getter
-public class GetPaymentCardResponse {
-
-    private Long id;
-    private String number;
-    private String holder;
-    private LocalDate expirationDate;
-    private Boolean active;
+public record GetPaymentCardResponse(
+        UUID id,
+        String number,
+        String holder,
+        LocalDate expirationDate,
+        Boolean active) {
 }

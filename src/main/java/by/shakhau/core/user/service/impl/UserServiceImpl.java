@@ -18,6 +18,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 @AllArgsConstructor
 public class UserServiceImpl implements UserService {
@@ -39,15 +41,15 @@ public class UserServiceImpl implements UserService {
 
     @Cacheable(value = "users", key = "#id")
     @Override
-    public User findById(Long id) {
+    public User findById(UUID id) {
         return mapper.toDomain(repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User with id = %d not found".formatted(id))));
+                .orElseThrow(() -> new ResourceNotFoundException("User with id = %s not found".formatted(id))));
     }
 
     @Override
-    public Long findUserIdByCardId(Long cardId) {
+    public UUID findUserIdByCardId(UUID cardId) {
         return repository.findUserIdByCardId(cardId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found by %d card id".formatted(cardId)));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found by %s card id".formatted(cardId)));
     }
 
     @Override
@@ -65,7 +67,7 @@ public class UserServiceImpl implements UserService {
         }
 
         UserEntity userEntity = repository.findById(user.getId())
-                .orElseThrow(() -> new ResourceNotFoundException("User with id = %d not found".formatted(user.getId())));
+                .orElseThrow(() -> new ResourceNotFoundException("User with id = %s not found".formatted(user.getId())));
 
         mapper.updateEntity(user, userEntity);
 
@@ -75,7 +77,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @CacheEvict(value = "users", key = "#id")
     @Override
-    public void updateActiveStatus(Long id, boolean active) {
+    public void updateActiveStatus(UUID id, boolean active) {
         if (!active) {
             paymentCardRepository.updateActiveStatusByUserId(id, active);
         }

@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.UUID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -31,11 +33,11 @@ public class PaymentCardControllerIT extends AbstractIntegrationTest {
     @Autowired
     private PaymentCardRepository paymentCardRepository;
 
-    private record TestPaymentCard(Long userId, Long cardId) {}
+    private record TestPaymentCard(UUID userId, UUID cardId) {}
 
     @Test
     void shouldCreatePaymentCardWhenRequestIsValid() throws Exception {
-        Long userId = createUser();
+        UUID userId = createUser();
 
         String request = """
                 {
@@ -64,7 +66,7 @@ public class PaymentCardControllerIT extends AbstractIntegrationTest {
 
         JsonNode json = objectMapper.readTree(response);
 
-        Long cardId = json.get("id").asLong();
+        UUID cardId = UUID.fromString(json.get("id").asText());
 
         assertThat(paymentCardRepository.findById(cardId)).isPresent();
     }
@@ -72,12 +74,12 @@ public class PaymentCardControllerIT extends AbstractIntegrationTest {
     @Test
     void shouldFindPaymentCardByIdWhenCardExists() throws Exception {
         TestPaymentCard card = createPaymentCard();
-        Long cardId = card.cardId();
+        UUID cardId = card.cardId();
 
         mockMvc.perform(get("/payment-card/{id}", cardId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id")
-                        .value(cardId))
+                        .value(cardId.toString()))
                 .andExpect(jsonPath("$.number")
                         .value("1234567890123456"))
                 .andExpect(jsonPath("$.holder")
@@ -86,14 +88,14 @@ public class PaymentCardControllerIT extends AbstractIntegrationTest {
 
     @Test
     void shouldReturnNotFoundWhenPaymentCardDoesNotExist() throws Exception {
-        mockMvc.perform(get("/payment-card/{id}", 999L))
+        mockMvc.perform(get("/payment-card/{id}", UUID.randomUUID()))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     void shouldFindPaymentCardsByUserIdWhenCardsExist() throws Exception {
         TestPaymentCard card = createPaymentCard();
-        Long userId = card.userId();
+        UUID userId = card.userId();
 
         mockMvc.perform(get("/payment-card/users/{userId}", userId)
                         .param("active", "true"))
@@ -119,8 +121,8 @@ public class PaymentCardControllerIT extends AbstractIntegrationTest {
     @Test
     void shouldUpdatePaymentCardWhenRequestIsValid() throws Exception {
         TestPaymentCard card = createPaymentCard();
-        Long cardId = card.cardId();
-        Long userId = card.userId();
+        UUID cardId = card.cardId();
+        UUID userId = card.userId();
 
         String request = """
                 {
@@ -135,14 +137,13 @@ public class PaymentCardControllerIT extends AbstractIntegrationTest {
                         .content(request))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id")
-                        .value(cardId))
+                        .value(cardId.toString()))
                 .andExpect(jsonPath("$.number")
                         .value("9999888877776666"))
                 .andExpect(jsonPath("$.holder")
                         .value("PETR PETROV"))
                 .andExpect(jsonPath("$.active")
                         .value(true));
-
 
         var updatedCard = paymentCardRepository.findById(cardId).orElseThrow();
 
@@ -154,7 +155,7 @@ public class PaymentCardControllerIT extends AbstractIntegrationTest {
     @Test
     void shouldUpdatePaymentCardStatusWhenRequestIsValid() throws Exception {
         TestPaymentCard card = createPaymentCard();
-        Long cardId = card.cardId();
+        UUID cardId = card.cardId();
 
         mockMvc.perform(patch("/payment-card/{id}/status", cardId)
                         .param("active", "false"))
@@ -168,7 +169,7 @@ public class PaymentCardControllerIT extends AbstractIntegrationTest {
 
     @Test
     void shouldReturnBadRequestWhenCreatePaymentCardRequestIsInvalid() throws Exception {
-        Long userId = createUser();
+        UUID userId = createUser();
 
         String request = """
                 {
@@ -186,7 +187,7 @@ public class PaymentCardControllerIT extends AbstractIntegrationTest {
     }
 
     private TestPaymentCard createPaymentCard() throws Exception {
-        Long userId = createUser();
+        UUID userId = createUser();
 
         String request = """
             {
@@ -205,12 +206,12 @@ public class PaymentCardControllerIT extends AbstractIntegrationTest {
                 .getResponse()
                 .getContentAsString();
 
-        Long cardId = objectMapper.readTree(response).get("id").asLong();
+        UUID cardId = UUID.fromString(objectMapper.readTree(response).get("id").asText());
 
         return new TestPaymentCard(userId, cardId);
     }
 
-    private Long createUser() throws Exception {
+    private UUID createUser() throws Exception {
         String request = """
                 {
                     "name": "John",
@@ -230,6 +231,6 @@ public class PaymentCardControllerIT extends AbstractIntegrationTest {
                         .getResponse()
                         .getContentAsString();
 
-        return objectMapper.readTree(response).get("id").asLong();
+        return UUID.fromString(objectMapper.readTree(response).get("id").asText());
     }
 }

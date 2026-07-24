@@ -19,8 +19,10 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PutMapping;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -37,7 +39,7 @@ public class PaymentCardServiceImpl implements PaymentCardService {
             @CacheEvict(value = "user-cards", key = "#userId + '-true'"),
             @CacheEvict(value = "user-cards", key = "#userId + '-false'"),
             @CacheEvict(value = "user-cards", key = "#userId + '-null'") })
-    public PaymentCard create(Long userId, PaymentCard paymentCard) {
+    public PaymentCard create(UUID userId, PaymentCard paymentCard) {
         if (paymentCard.getId() != null) {
             throw new ResourceForbiddenException("Payment card id must be null");
         }
@@ -47,14 +49,14 @@ public class PaymentCardServiceImpl implements PaymentCardService {
 
     @Cacheable(value = "payment-cards", key = "#id")
     @Override
-    public PaymentCard findById(Long id) {
+    public PaymentCard findById(UUID id) {
         return mapper.toDomain(repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Payment card with id = %d not found".formatted(id))));
+                .orElseThrow(() -> new ResourceNotFoundException("Payment card with id = %s not found".formatted(id))));
     }
 
     @Cacheable(value = "user-cards", key = "#userId + '-' + #active")
     @Override
-    public List<PaymentCard> findByUserId(Long userId, Boolean active) {
+    public List<PaymentCard> findByUserId(UUID userId, Boolean active) {
         List<PaymentCardEntity> paymentCards = null;
         if (active != null) {
             paymentCards = repository.findAllByUserIdAndActive(userId, active);
@@ -80,14 +82,14 @@ public class PaymentCardServiceImpl implements PaymentCardService {
             @CacheEvict(value = "user-cards", key = "#userId + '-null'") })
     @Transactional
     @Override
-    public PaymentCard update(Long userId, PaymentCard paymentCard) {
+    public PaymentCard update(UUID userId, PaymentCard paymentCard) {
         if (paymentCard.getId() == null) {
             throw new ResourceForbiddenException("Payment card id must not be null");
         }
 
         PaymentCardEntity paymentCardEntity = repository.findById(paymentCard.getId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Payment card with id = %d not found".formatted(paymentCard.getId())));
+                        "Payment card with id = %s not found".formatted(paymentCard.getId())));
 
         mapper.updateEntity(paymentCard, paymentCardEntity);
 
@@ -102,13 +104,13 @@ public class PaymentCardServiceImpl implements PaymentCardService {
     })
     @Transactional
     @Override
-    public void updateActiveStatus(Long userId, Long id, boolean active) {
+    public void updateActiveStatus(UUID id, UUID userId, boolean active) {
         repository.updateActiveStatus(id, active);
     }
 
-    private PaymentCard save(Long userId, PaymentCardEntity paymentCardEntity) {
+    private PaymentCard save(UUID userId, PaymentCardEntity paymentCardEntity) {
         UserEntity userEntity = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User with id = %d not found".formatted(userId)));
+                .orElseThrow(() -> new ResourceNotFoundException("User with id = %s not found".formatted(userId)));
         paymentCardEntity.setUser(userEntity);
         return mapper.toDomain(repository.save(paymentCardEntity));
     }

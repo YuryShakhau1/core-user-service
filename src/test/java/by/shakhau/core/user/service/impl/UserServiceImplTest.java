@@ -19,12 +19,12 @@ import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -110,7 +110,7 @@ public class UserServiceImplTest extends CommonTest {
 
         assertThatThrownBy(() -> service.findById(USER_ID))
                 .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessage("User with id = %d not found".formatted(USER_ID));
+                .hasMessage("User with id = %s not found".formatted(USER_ID));
 
         verify(repository).findById(USER_ID);
         verify(mapper, never()).toDomain(any());
@@ -120,7 +120,7 @@ public class UserServiceImplTest extends CommonTest {
     void shouldReturnUserIdWhenCardExists() {
         when(repository.findUserIdByCardId(CARD_ID)).thenReturn(Optional.of(USER_ID));
 
-        Long result = service.findUserIdByCardId(CARD_ID);
+        UUID result = service.findUserIdByCardId(CARD_ID);
 
         assertThat(result).isEqualTo(USER_ID);
 
@@ -133,7 +133,7 @@ public class UserServiceImplTest extends CommonTest {
 
         assertThatThrownBy(() -> service.findUserIdByCardId(CARD_ID))
                 .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessage("User not found by %d card id".formatted(CARD_ID));
+                .hasMessage("User not found by %s card id".formatted(CARD_ID));
 
         verify(repository).findUserIdByCardId(CARD_ID);
     }
@@ -177,7 +177,7 @@ public class UserServiceImplTest extends CommonTest {
 
         assertThatThrownBy(() -> service.update(user))
                 .isInstanceOf(ResourceNotFoundException.class)
-                        .hasMessage("User with id = %d not found".formatted(USER_ID));
+                        .hasMessage("User with id = %s not found".formatted(USER_ID));
 
         verify(mapper, never()).updateEntity(user, userEntity);
         verify(repository, never()).save(userEntity);
@@ -208,7 +208,7 @@ public class UserServiceImplTest extends CommonTest {
     void shouldNotDeactivatePaymentCardsWhenUserBecomesActive() {
         service.updateActiveStatus(USER_ID, true);
 
-        verify(paymentCardRepository, never()).updateActiveStatusByUserId(anyLong(), anyBoolean());
+        verify(paymentCardRepository, never()).updateActiveStatusByUserId(any(UUID.class), anyBoolean());
 
         verify(repository).updateActiveStatus(USER_ID, true);
     }

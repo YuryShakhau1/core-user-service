@@ -16,8 +16,6 @@ public interface PaymentCardMapper {
     PaymentCardEntity toEntity(PaymentCard paymentCard);
     PaymentCard toDomain(PaymentCardEntity entity);
 
-    @BeanMapping(
-            nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE
-    )
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateEntity(PaymentCard user, @MappingTarget PaymentCardEntity entity);
 }

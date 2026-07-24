@@ -20,6 +20,7 @@ import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -103,7 +104,7 @@ public class PaymentCardServiceImplTest extends CommonTest {
 
         assertThatThrownBy(() -> service.create(USER_ID, newCard))
                 .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessage("User with id = %d not found".formatted(USER_ID));
+                .hasMessage("User with id = %s not found".formatted(USER_ID));
 
         verify(repository, never()).save(any());
     }
@@ -124,7 +125,7 @@ public class PaymentCardServiceImplTest extends CommonTest {
 
         assertThatThrownBy(() -> service.findById(CARD_ID))
                 .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessage("Payment card with id = %d not found".formatted(CARD_ID));
+                .hasMessage("Payment card with id = %s not found".formatted(CARD_ID));
     }
 
     @Test
@@ -139,7 +140,7 @@ public class PaymentCardServiceImplTest extends CommonTest {
         assertThat(result).containsExactly(paymentCard);
 
         verify(repository).findAllByUserIdAndActive(USER_ID, true);
-        verify(repository, never()).findAllByUserId(anyLong());
+        verify(repository, never()).findAllByUserId(any(UUID.class));
     }
 
     @Test
@@ -152,7 +153,7 @@ public class PaymentCardServiceImplTest extends CommonTest {
         assertThat(result).containsExactly(paymentCard);
 
         verify(repository).findAllByUserId(USER_ID);
-        verify(repository, never()).findAllByUserIdAndActive(anyLong(), anyBoolean());
+        verify(repository, never()).findAllByUserIdAndActive(any(UUID.class), anyBoolean());
     }
 
     @Test
@@ -189,7 +190,7 @@ public class PaymentCardServiceImplTest extends CommonTest {
 
         assertThatThrownBy(() -> service.update(USER_ID, paymentCard))
                 .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessage("Payment card with id = %d not found".formatted(CARD_ID));
+                .hasMessage("Payment card with id = %s not found".formatted(CARD_ID));
 
         verify(mapper, never()).updateEntity(paymentCard, paymentCardEntity);
         verify(repository, never()).save(paymentCardEntity);
@@ -213,14 +214,14 @@ public class PaymentCardServiceImplTest extends CommonTest {
 
         assertThatThrownBy(() -> service.update(USER_ID, paymentCard))
                 .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessage("Payment card with id = %d not found".formatted(CARD_ID));
+                .hasMessage("Payment card with id = %s not found".formatted(CARD_ID));
 
         verify(repository, never()).save(any());
     }
 
     @Test
     void shouldUpdatePaymentCardActiveStatus() {
-        service.updateActiveStatus(USER_ID, CARD_ID, false);
+        service.updateActiveStatus(CARD_ID, USER_ID, false);
 
         verify(repository).updateActiveStatus(CARD_ID, false);
     }

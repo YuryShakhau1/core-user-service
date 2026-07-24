@@ -18,9 +18,7 @@ public interface UserMapper {
     UserEntity toEntity(User user);
     User toDomain(UserEntity entity);
 
-    @BeanMapping(
-            nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE
-    )
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateEntity(User user, @MappingTarget UserEntity entity);
 
     @AfterMapping

@@ -3,12 +3,12 @@ package by.shakhau.core.user.integration;
 import by.shakhau.core.user.repository.UserRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.CacheManager;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -60,19 +60,19 @@ class UserControllerIT extends AbstractIntegrationTest {
                         .getContentAsString();
 
         JsonNode json = objectMapper.readTree(response);
-        Long id = json.get("id").asLong();
+        UUID id = UUID.fromString(json.get("id").asText());
 
         assertThat(userRepository.findById(id)).isPresent();
     }
 
     @Test
     void shouldFindUserByIdWhenUserExists() throws Exception {
-        Long id = createUser();
+        UUID id = createUser();
 
         mockMvc.perform(get("/users/{id}", id))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id")
-                        .value(id))
+                        .value(id.toString()))
                 .andExpect(jsonPath("$.name")
                         .value("John"))
                 .andExpect(jsonPath("$.email")
@@ -81,7 +81,7 @@ class UserControllerIT extends AbstractIntegrationTest {
 
     @Test
     void shouldReturnNotFoundWhenUserDoesNotExist() throws Exception {
-        mockMvc.perform(get("/users/{id}", 999L))
+        mockMvc.perform(get("/users/{id}", UUID.randomUUID()))
                 .andExpect(status().isNotFound());
     }
 
@@ -101,11 +101,11 @@ class UserControllerIT extends AbstractIntegrationTest {
 
     @Test
     void shouldUpdateUserWhenRequestIsValid() throws Exception {
-        Long id = createUser();
+        UUID id = createUser();
 
         String request = """
                 {
-                    "id": %d,
+                    "id": "%s",
                     "name": "Petr",
                     "surname": "Petrov",
                     "birthDate": "1990-01-01",
@@ -118,7 +118,7 @@ class UserControllerIT extends AbstractIntegrationTest {
                         .content(request))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id")
-                        .value(id))
+                        .value(id.toString()))
                 .andExpect(jsonPath("$.name")
                         .value("Petr"))
                 .andExpect(jsonPath("$.surname")
@@ -134,7 +134,7 @@ class UserControllerIT extends AbstractIntegrationTest {
 
     @Test
     void shouldUpdateUserStatusWhenActiveIsFalse() throws Exception {
-        Long id = createUser();
+        UUID id = createUser();
 
         mockMvc.perform(patch("/users/{id}", id)
                         .param("active", "false"))
@@ -165,7 +165,7 @@ class UserControllerIT extends AbstractIntegrationTest {
                 .andExpect(status().isBadRequest());
     }
 
-    private Long createUser() throws Exception {
+    private UUID createUser() throws Exception {
         String request = """
                 {
                     "name": "John",
@@ -185,6 +185,6 @@ class UserControllerIT extends AbstractIntegrationTest {
                         .getResponse()
                         .getContentAsString();
 
-        return objectMapper.readTree(response).get("id").asLong();
+        return UUID.fromString(objectMapper.readTree(response).get("id").asText());
     }
 }
