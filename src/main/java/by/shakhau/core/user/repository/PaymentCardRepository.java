@@ -7,19 +7,19 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.UUID;
 
-public interface PaymentCardRepository extends JpaRepository<PaymentCardEntity, Long>,
+public interface PaymentCardRepository extends JpaRepository<PaymentCardEntity, UUID>,
         JpaSpecificationExecutor<PaymentCardEntity> {
 
-    List<PaymentCardEntity> findAllByUserId(Long userId);
-    List<PaymentCardEntity> findAllByUserIdAndActive(Long userId, Boolean active);
+    List<PaymentCardEntity> findAllByUserId(UUID userId);
+    List<PaymentCardEntity> findAllByUserIdAndActive(UUID userId, Boolean active);
 
     @Modifying
     @Query("UPDATE PaymentCardEntity pc SET pc.active = :active WHERE pc.id = :id")
-    void updateActiveStatus(Long id, Boolean active);
+    void updateActiveStatus(UUID id, Boolean active);
 
     @Modifying
     @Query("UPDATE PaymentCardEntity pc SET pc.active = :active WHERE pc.user.id = :userId")
-    void updateActiveStatusByUserId(Long userId, Boolean active);
+    void updateActiveStatusByUserId(UUID userId, Boolean active);
 }

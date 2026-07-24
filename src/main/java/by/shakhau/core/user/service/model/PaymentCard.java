@@ -5,12 +5,13 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Getter
 @Setter
 public class PaymentCard {
 
-    private Long id;
+    private UUID id;
     private String number;
     private String holder;
     private LocalDate expirationDate;

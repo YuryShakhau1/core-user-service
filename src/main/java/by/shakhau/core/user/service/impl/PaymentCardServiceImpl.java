@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,7 +28,7 @@ public class PaymentCardServiceImpl implements PaymentCardService {
 
     @Transactional
     @Override
-    public PaymentCard create(Long userId, PaymentCard paymentCard) {
+    public PaymentCard create(UUID userId, PaymentCard paymentCard) {
         if (paymentCard.getId() != null) {
             throw new IllegalArgumentException("Payment card id must be null");
         }
@@ -36,12 +37,12 @@ public class PaymentCardServiceImpl implements PaymentCardService {
     }
 
     @Override
-    public PaymentCard findById(Long id) {
+    public PaymentCard findById(UUID id) {
         return mapper.toDomain(repository.findById(id).orElse(null));
     }
 
     @Override
-    public List<PaymentCard> findByUserId(Long userId, Boolean active) {
+    public List<PaymentCard> findByUserId(UUID userId, Boolean active) {
         List<PaymentCardEntity> paymentCards = null;
         if (active != null) {
             paymentCards = repository.findAllByUserIdAndActive(userId, active);
@@ -62,14 +63,14 @@ public class PaymentCardServiceImpl implements PaymentCardService {
 
     @Transactional
     @Override
-    public PaymentCard update(Long userId, PaymentCard paymentCard) {
+    public PaymentCard update(UUID userId, PaymentCard paymentCard) {
         if (paymentCard.getId() == null) {
             throw new IllegalArgumentException("Payment card id must not be null");
         }
 
         PaymentCardEntity paymentCardEntity = repository.findById(paymentCard.getId())
                 .orElseThrow(() -> new IllegalArgumentException(
-                        "Payment card with id = %d not found".formatted(paymentCard.getId())));
+                        "Payment card with id = %s not found".formatted(paymentCard.getId())));
 
         mapper.updateEntity(paymentCard, paymentCardEntity);
 
@@ -78,13 +79,13 @@ public class PaymentCardServiceImpl implements PaymentCardService {
 
     @Transactional
     @Override
-    public void updateActiveStatus(Long id, boolean active) {
+    public void updateActiveStatus(UUID id, boolean active) {
         repository.updateActiveStatus(id, active);
     }
 
-    private PaymentCard save(Long userId, PaymentCardEntity paymentCardEntity) {
+    private PaymentCard save(UUID userId, PaymentCardEntity paymentCardEntity) {
         UserEntity userEntity = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User with id = %d not found".formatted(userId)));
+                .orElseThrow(() -> new IllegalArgumentException("User with id = %s not found".formatted(userId)));
         paymentCardEntity.setUser(userEntity);
         return mapper.toDomain(repository.save(paymentCardEntity));
     }

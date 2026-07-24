@@ -10,13 +10,14 @@ import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 @Getter
 @Setter
 public class UpdateUserRequest {
 
     @NotNull(message = "User id is required")
-    private Long id;
+    private UUID id;
 
     @NotBlank(message = "User name is required")
     @Size(min = 1, max = 50, message = "User name must be between 1 and 50 characters")
