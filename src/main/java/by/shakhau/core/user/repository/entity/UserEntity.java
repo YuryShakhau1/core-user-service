@@ -1,6 +1,5 @@
 package by.shakhau.core.user.repository.entity;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -14,6 +13,7 @@ import lombok.Setter;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "users")
@@ -24,7 +24,7 @@ public class UserEntity extends AuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private UUID id;
     private String name;
     private String surname;
     private LocalDate birthDate;

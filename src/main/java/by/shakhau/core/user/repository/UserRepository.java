@@ -7,14 +7,15 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.Optional;
+import java.util.UUID;
 
-public interface UserRepository extends JpaRepository<UserEntity, Long>,
+public interface UserRepository extends JpaRepository<UserEntity, UUID>,
         JpaSpecificationExecutor<UserEntity> {
 
     @Query(value = "SELECT pc.user.id FROM PaymentCardEntity pc WHERE pc.id = :cardId")
-    Optional<Long> findUserIdByCardId(Long cardId);
+    Optional<Long> findUserIdByCardId(UUID cardId);
 
     @Modifying
     @Query("UPDATE UserEntity u SET u.active = :active WHERE u.id = :id")
-    void updateActiveStatus(Long id, Boolean active);
+    void updateActiveStatus(UUID id, Boolean active);
 }

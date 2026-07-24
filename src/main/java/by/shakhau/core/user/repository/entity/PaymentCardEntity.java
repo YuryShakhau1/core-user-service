@@ -15,6 +15,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 @Entity
 @Table(name = "payment_cards")
@@ -25,7 +26,7 @@ public class PaymentCardEntity extends AuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private UUID id;
 
     @Convert(converter = EncryptStringConverter.class)
     private String number;
