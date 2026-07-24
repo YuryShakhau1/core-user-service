@@ -25,7 +25,7 @@ import java.util.UUID;
 public class PaymentCardEntity extends AuditableEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Convert(converter = EncryptStringConverter.class)

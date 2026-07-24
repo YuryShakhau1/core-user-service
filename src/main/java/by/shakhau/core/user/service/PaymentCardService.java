@@ -14,5 +14,5 @@ public interface PaymentCardService {
     List<PaymentCard> findByUserId(UUID userId, Boolean active);
     Page<PaymentCard> findAll(String name, String surname, Pageable pageable);
     PaymentCard update(UUID userId, PaymentCard paymentCard);
-    void updateActiveStatus(UUID id, boolean active);
+    void updateActiveStatus(UUID id, UUID userId, boolean active);
 }

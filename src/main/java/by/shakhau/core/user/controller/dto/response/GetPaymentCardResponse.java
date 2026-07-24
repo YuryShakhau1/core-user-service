@@ -6,6 +6,7 @@ import java.util.UUID;
 public record GetPaymentCardResponse(
         UUID id,
         String number,
+        String holder,
         LocalDate expirationDate,
         Boolean active) {
-};
+}

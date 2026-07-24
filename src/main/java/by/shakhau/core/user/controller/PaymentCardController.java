@@ -81,8 +81,10 @@ public class PaymentCardController {
     }
 
     @PatchMapping(value = "/{id}/status")
-    public ResponseEntity<Void> updatePaymentCardStatus(@PathVariable UUID id, @RequestParam Boolean active) {
-        service.updateActiveStatus(id, active);
+    public ResponseEntity<Void> updatePaymentCardStatus(
+            @PathVariable UUID id, @RequestParam Boolean active) {
+        UUID userId = userService.findUserIdByCardId(id);
+        service.updateActiveStatus(id, userId, active);
         return ResponseEntity.noContent().build();
     }
 }

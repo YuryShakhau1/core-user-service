@@ -104,7 +104,7 @@ public class PaymentCardServiceImpl implements PaymentCardService {
     })
     @Transactional
     @Override
-    public void updateActiveStatus(UUID id, boolean active) {
+    public void updateActiveStatus(UUID id, UUID userId, boolean active) {
         repository.updateActiveStatus(id, active);
     }
 
