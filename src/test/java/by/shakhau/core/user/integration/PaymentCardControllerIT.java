@@ -12,6 +12,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -33,7 +34,8 @@ class PaymentCardControllerIT extends AbstractIntegrationTest {
     @Autowired
     private PaymentCardRepository paymentCardRepository;
 
-    private record TestPaymentCard(UUID userId, UUID cardId) {}
+    private record TestPaymentCard(UUID userId, UUID cardId) {
+    }
 
     @Test
     void shouldCreatePaymentCardWhenRequestIsValid() throws Exception {
@@ -49,10 +51,11 @@ class PaymentCardControllerIT extends AbstractIntegrationTest {
                 """;
 
         String response =
-                mockMvc.perform(post("/payment-card/users/{userId}", userId)
+                mockMvc.perform(post("/payment-cards/users/{userId}", userId)
                                 .contentType(MediaType.APPLICATION_JSON)
+                                .header(AUTHORIZATION, AUTHORIZATION_HEADER)
                                 .content(request))
-                        .andExpect(status().isOk())
+                        .andExpect(status().isCreated())
                         .andExpect(jsonPath("$.id").exists())
                         .andExpect(jsonPath("$.number").value("1234567890123456"))
                         .andExpect(jsonPath("$.holder").value("JOHN DOE"))
@@ -73,7 +76,8 @@ class PaymentCardControllerIT extends AbstractIntegrationTest {
         TestPaymentCard card = createPaymentCard();
         UUID cardId = card.cardId();
 
-        mockMvc.perform(get("/payment-card/{id}", cardId))
+        mockMvc.perform(get("/payment-cards/{id}", cardId)
+                        .header(AUTHORIZATION, AUTHORIZATION_HEADER))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(cardId.toString()))
                 .andExpect(jsonPath("$.number").value("1234567890123456"))
@@ -82,7 +86,8 @@ class PaymentCardControllerIT extends AbstractIntegrationTest {
 
     @Test
     void shouldReturnNotFoundWhenPaymentCardDoesNotExist() throws Exception {
-        mockMvc.perform(get("/payment-card/{id}", UUID.randomUUID()))
+        mockMvc.perform(get("/payment-cards/{id}", UUID.randomUUID())
+                        .header(AUTHORIZATION, AUTHORIZATION_HEADER))
                 .andExpect(status().isNotFound());
     }
 
@@ -91,7 +96,8 @@ class PaymentCardControllerIT extends AbstractIntegrationTest {
         TestPaymentCard card = createPaymentCard();
         UUID userId = card.userId();
 
-        mockMvc.perform(get("/payment-card/users/{userId}", userId)
+        mockMvc.perform(get("/payment-cards/users/{userId}", userId)
+                        .header(AUTHORIZATION, AUTHORIZATION_HEADER)
                         .param("active", "true"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
@@ -102,7 +108,8 @@ class PaymentCardControllerIT extends AbstractIntegrationTest {
     void shouldFindAllPaymentCardsWhenCardsExist() throws Exception {
         createPaymentCard();
 
-        mockMvc.perform(get("/payment-card")
+        mockMvc.perform(get("/payment-cards")
+                        .header(AUTHORIZATION, AUTHORIZATION_HEADER)
                         .param("page", "0")
                         .param("size", "10"))
                 .andExpect(status().isOk())
@@ -124,8 +131,9 @@ class PaymentCardControllerIT extends AbstractIntegrationTest {
                 }
                 """;
 
-        mockMvc.perform(put("/payment-card/{id}/users/{userId}", cardId, userId)
+        mockMvc.perform(put("/payment-cards/{id}/users/{userId}", cardId, userId)
                         .contentType(MediaType.APPLICATION_JSON)
+                        .header(AUTHORIZATION, AUTHORIZATION_HEADER)
                         .content(request))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(cardId.toString()))
@@ -145,7 +153,8 @@ class PaymentCardControllerIT extends AbstractIntegrationTest {
         TestPaymentCard card = createPaymentCard();
         UUID cardId = card.cardId();
 
-        mockMvc.perform(patch("/payment-card/{id}/status", cardId)
+        mockMvc.perform(patch("/payment-cards/{id}/status", cardId)
+                        .header(AUTHORIZATION, AUTHORIZATION_HEADER)
                         .param("active", "false"))
                 .andExpect(status().isNoContent());
 
@@ -168,7 +177,8 @@ class PaymentCardControllerIT extends AbstractIntegrationTest {
                 }
                 """;
 
-        mockMvc.perform(post("/payment-card/users/{userId}", userId)
+        mockMvc.perform(post("/payment-cards/users/{userId}", userId)
+                        .header(AUTHORIZATION, AUTHORIZATION_HEADER)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(request))
                 .andExpect(status().isBadRequest());
@@ -178,18 +188,19 @@ class PaymentCardControllerIT extends AbstractIntegrationTest {
         UUID userId = createUser();
 
         String request = """
-            {
-                "number": "1234567890123456",
-                "holder": "JOHN DOE",
-                "expirationDate": "2230-12-31",
-                "active": true
-            }
-            """;
+                {
+                    "number": "1234567890123456",
+                    "holder": "JOHN DOE",
+                    "expirationDate": "2230-12-31",
+                    "active": true
+                }
+                """;
 
-        String response = mockMvc.perform(post("/payment-card/users/{userId}", userId)
+        String response = mockMvc.perform(post("/payment-cards/users/{userId}", userId)
+                        .header(AUTHORIZATION, AUTHORIZATION_HEADER)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(request))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
@@ -197,28 +208,5 @@ class PaymentCardControllerIT extends AbstractIntegrationTest {
         UUID cardId = UUID.fromString(objectMapper.readTree(response).get("id").asText());
 
         return new TestPaymentCard(userId, cardId);
-    }
-
-    private UUID createUser() throws Exception {
-        String request = """
-                {
-                    "name": "John",
-                    "surname": "Doe",
-                    "birthDate": "1995-05-10",
-                    "email": "john@mail.com",
-                    "active": true
-                }
-                """.formatted(System.nanoTime());
-
-        String response =
-                mockMvc.perform(post("/users")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(request))
-                        .andExpect(status().isOk())
-                        .andReturn()
-                        .getResponse()
-                        .getContentAsString();
-
-        return UUID.fromString(objectMapper.readTree(response).get("id").asText());
     }
 }

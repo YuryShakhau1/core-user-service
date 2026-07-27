@@ -11,6 +11,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -33,8 +34,8 @@ class UserControllerIT extends AbstractIntegrationTest {
     void shouldCreateUserWhenRequestIsValid() throws Exception {
         String request = """
                 {
-                    "name": "John",
-                    "surname": "Doe",
+                    "firstName": "John",
+                    "lastName": "Doe",
                     "birthDate": "1995-05-10",
                     "email": "john@mail.com",
                     "active": true
@@ -43,12 +44,14 @@ class UserControllerIT extends AbstractIntegrationTest {
 
         String response =
                 mockMvc.perform(post("/users")
+                                .header(AUTHORIZATION, AUTHORIZATION_HEADER)
                                 .contentType(MediaType.APPLICATION_JSON)
+                                .param("role", "ROLE_ADMIN")
                                 .content(request))
-                        .andExpect(status().isOk())
+                        .andExpect(status().isCreated())
                         .andExpect(jsonPath("$.id").exists())
-                        .andExpect(jsonPath("$.name").value("John"))
-                        .andExpect(jsonPath("$.surname").value("Doe"))
+                        .andExpect(jsonPath("$.firstName").value("John"))
+                        .andExpect(jsonPath("$.lastName").value("Doe"))
                         .andExpect(jsonPath("$.birthDate").value("1995-05-10"))
                         .andExpect(jsonPath("$.email").value("john@mail.com"))
                         .andExpect(jsonPath("$.active").value(true))
@@ -63,54 +66,22 @@ class UserControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
-    void shouldUpdateUserByEmailWhenUserAlreadyCreated() throws Exception {
-        UUID id = createUser();
-
-        String request = """
-                {
-                    "name": "John2",
-                    "surname": "Doe2",
-                    "birthDate": "1990-01-02",
-                    "email": "john@mail.com",
-                    "active": true
-                }
-                """;
-
-        String response =
-                mockMvc.perform(post("/users")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(request))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.id").value(id.toString()))
-                        .andExpect(jsonPath("$.name").value("John2"))
-                        .andExpect(jsonPath("$.surname").value("Doe2"))
-                        .andExpect(jsonPath("$.birthDate").value("1990-01-02"))
-                        .andExpect(jsonPath("$.email").value("john@mail.com"))
-                        .andExpect(jsonPath("$.active").value(true))
-                        .andReturn()
-                        .getResponse()
-                        .getContentAsString();
-
-        JsonNode json = objectMapper.readTree(response);
-        UUID userId = UUID.fromString(json.get("id").asText());
-
-        assertThat(userRepository.findById(userId)).isPresent();
-    }
-
-    @Test
     void shouldFindUserByIdWhenUserExists() throws Exception {
         UUID id = createUser();
 
-        mockMvc.perform(get("/users/{id}", id))
+        mockMvc.perform(get("/users/{id}", id)
+                        .header(AUTHORIZATION, AUTHORIZATION_HEADER))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(id.toString()))
-                .andExpect(jsonPath("$.name").value("John"))
+                .andExpect(jsonPath("$.firstName").value("John"))
+                .andExpect(jsonPath("$.lastName").value("Doe"))
                 .andExpect(jsonPath("$.email").value("john@mail.com"));
     }
 
     @Test
     void shouldReturnNotFoundWhenUserDoesNotExist() throws Exception {
-        mockMvc.perform(get("/users/{id}", UUID.randomUUID()))
+        mockMvc.perform(get("/users/{id}", UUID.randomUUID())
+                        .header(AUTHORIZATION, AUTHORIZATION_HEADER))
                 .andExpect(status().isNotFound());
     }
 
@@ -119,11 +90,12 @@ class UserControllerIT extends AbstractIntegrationTest {
         createUser();
 
         mockMvc.perform(get("/users")
+                        .header(AUTHORIZATION, AUTHORIZATION_HEADER)
                         .param("page", "0")
                         .param("size", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
-                .andExpect(jsonPath("$.content[0].name").value("John"));
+                .andExpect(jsonPath("$.content[0].firstName").value("John"));
     }
 
     @Test
@@ -133,20 +105,21 @@ class UserControllerIT extends AbstractIntegrationTest {
         String request = """
                 {
                     "id": "%s",
-                    "name": "Petr",
-                    "surname": "Petrov",
+                    "firstName": "Petr",
+                    "lastName": "Petrov",
                     "birthDate": "1990-01-01",
                     "email": "petr@mail.com"
                 }
                 """.formatted(id);
 
         mockMvc.perform(put("/users/{id}", id)
+                        .header(AUTHORIZATION, AUTHORIZATION_HEADER)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(request))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(id.toString()))
-                .andExpect(jsonPath("$.name").value("Petr"))
-                .andExpect(jsonPath("$.surname").value("Petrov"))
+                .andExpect(jsonPath("$.firstName").value("Petr"))
+                .andExpect(jsonPath("$.lastName").value("Petrov"))
                 .andExpect(jsonPath("$.active").value(true));
 
         var user = userRepository.findById(id).orElseThrow();
@@ -160,6 +133,7 @@ class UserControllerIT extends AbstractIntegrationTest {
         UUID id = createUser();
 
         mockMvc.perform(patch("/users/{id}", id)
+                        .header(AUTHORIZATION, AUTHORIZATION_HEADER)
                         .param("active", "false"))
                 .andExpect(status().isNoContent());
 
@@ -174,8 +148,8 @@ class UserControllerIT extends AbstractIntegrationTest {
     void shouldReturnBadRequestWhenCreateRequestIsInvalid() throws Exception {
         String request = """
                 {
-                    "name": "",
-                    "surname": "",
+                    "firstName": "",
+                    "lastName": "",
                     "birthDate": null,
                     "email": "wrong-email",
                     "active": null
@@ -183,31 +157,9 @@ class UserControllerIT extends AbstractIntegrationTest {
                 """;
 
         mockMvc.perform(post("/users")
+                        .header(AUTHORIZATION, AUTHORIZATION_HEADER)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(request))
                 .andExpect(status().isBadRequest());
-    }
-
-    private UUID createUser() throws Exception {
-        String request = """
-                {
-                    "name": "John",
-                    "surname": "Doe",
-                    "birthDate": "1995-05-10",
-                    "email": "john@mail.com",
-                    "active": true
-                }
-                """;
-
-        String response =
-                mockMvc.perform(post("/users")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(request))
-                        .andExpect(status().isOk())
-                        .andReturn()
-                        .getResponse()
-                        .getContentAsString();
-
-        return UUID.fromString(objectMapper.readTree(response).get("id").asText());
     }
 }

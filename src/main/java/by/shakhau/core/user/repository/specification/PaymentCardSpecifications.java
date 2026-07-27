@@ -12,29 +12,19 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class PaymentCardSpecifications {
 
-    public static Specification<PaymentCardEntity> withFilters(String name, String surname) {
+    public static Specification<PaymentCardEntity> withFilters(String firstName, String lastName) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            if (name != null && !name.isBlank()) {
-                predicates.add(cb.like(cb.lower(root.get("user").get("name")), name.toLowerCase() + "%"));
+            if (firstName != null && !firstName.isBlank()) {
+                predicates.add(cb.like(cb.lower(root.get("user").get("name")), firstName.toLowerCase() + "%"));
             }
 
-            if (surname != null && !surname.isBlank()) {
-                return cb.like(cb.lower(root.get("user").get("surname")), surname.toLowerCase() + "%");
+            if (lastName != null && !lastName.isBlank()) {
+                return cb.like(cb.lower(root.get("user").get("surname")), lastName.toLowerCase() + "%");
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));
-        };
-    }
-
-    public static Specification<PaymentCardEntity> hasUserSurname(String surname) {
-        return (root, query, cb) -> {
-            if (surname == null || surname.isBlank()) {
-                return cb.conjunction();
-            }
-
-            return cb.like(cb.lower(root.get("user").get("surname")), "%" + surname.toLowerCase() + "%");
         };
     }
 }

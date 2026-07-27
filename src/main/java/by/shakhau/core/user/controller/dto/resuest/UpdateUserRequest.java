@@ -19,13 +19,13 @@ public class UpdateUserRequest {
     @NotNull(message = "User id is required")
     private UUID id;
 
-    @NotBlank(message = "User name is required")
-    @Size(min = 1, max = 50, message = "User name must be between 1 and 50 characters")
-    private String name;
+    @NotBlank(message = "User first name is required")
+    @Size(min = 1, max = 50, message = "User first name must be between 1 and 50 characters")
+    private String firstName;
 
-    @NotBlank(message = "User surname is required")
-    @Size(min = 1, max = 50, message = "User surname must be between 1 and 50 characters")
-    private String surname;
+    @NotBlank(message = "User last name is required")
+    @Size(min = 1, max = 50, message = "User last name must be between 1 and 50 characters")
+    private String lastName;
 
     @NotNull(message = "Birth date is required")
     @Past(message = "Birth date must be a date in the past")

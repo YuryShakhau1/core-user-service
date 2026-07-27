@@ -31,7 +31,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class PaymentCardServiceImplTest extends CommonUtil {
+public class PaymentCardServiceImplTest extends CommonTestUtil {
 
     @Mock
     private PaymentCardMapper mapper;
@@ -163,7 +163,7 @@ public class PaymentCardServiceImplTest extends CommonUtil {
         when(repository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
         when(mapper.toDomain(paymentCardEntity)).thenReturn(paymentCard);
 
-        Page<PaymentCard> result = service.findAll(USER_NAME, USER_NAME, pageable);
+        Page<PaymentCard> result = service.findAll(USER_FIRST_NAME, USER_FIRST_NAME, pageable);
 
         assertThat(result.getContent()).containsExactly(paymentCard);
     }

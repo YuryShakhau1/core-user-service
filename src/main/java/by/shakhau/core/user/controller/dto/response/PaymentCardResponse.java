@@ -3,11 +3,10 @@ package by.shakhau.core.user.controller.dto.response;
 import java.time.LocalDate;
 import java.util.UUID;
 
-public record GetUserResponse(
+public record PaymentCardResponse(
         UUID id,
-        String name,
-        String surname,
-        LocalDate birthDate,
-        String email,
+        String number,
+        String holder,
+        LocalDate expirationDate,
         Boolean active) {
 }

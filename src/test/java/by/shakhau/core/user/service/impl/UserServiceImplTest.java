@@ -1,11 +1,19 @@
 package by.shakhau.core.user.service.impl;
 
+import by.shakhau.core.user.messaging.event.UserCreatedEvent;
+import by.shakhau.core.user.messaging.event.UserStatusUpdatedEvent;
+import by.shakhau.core.user.messaging.event.UserUpdatedEvent;
+import by.shakhau.core.user.messaging.mapper.UserEventMapper;
+import by.shakhau.core.user.messaging.producer.CreateUserProducer;
+import by.shakhau.core.user.messaging.producer.UpdateUserProducer;
+import by.shakhau.core.user.messaging.producer.UpdateUserStatusProducer;
 import by.shakhau.core.user.repository.PaymentCardRepository;
 import by.shakhau.core.user.repository.UserRepository;
 import by.shakhau.core.user.repository.entity.UserEntity;
 import by.shakhau.core.user.service.exception.ResourceForbiddenException;
 import by.shakhau.core.user.service.exception.ResourceNotFoundException;
 import by.shakhau.core.user.service.mapper.UserMapper;
+import by.shakhau.core.user.service.model.CreatedUser;
 import by.shakhau.core.user.service.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,18 +33,31 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-class UserServiceImplTest extends CommonUtil {
+class UserServiceImplTest extends CommonTestUtil {
+
+    @Mock
+    private UpdateUserStatusProducer updateUserStatusProducer;
 
     @Mock
     private UserMapper mapper;
 
     @Mock
     private UserRepository repository;
+
+    @Mock
+    private UserEventMapper userEventMapper;
+
+    @Mock
+    private CreateUserProducer createUserProducer;
+
+    @Mock
+    private UpdateUserProducer updateUserProducer;
 
     @Mock
     private PaymentCardRepository paymentCardRepository;
@@ -51,21 +72,61 @@ class UserServiceImplTest extends CommonUtil {
     public void setUp() {
         user = new User();
         user.setId(USER_ID);
-        user.setName(USER_NAME);
-        user.setSurname(USER_SURNAME);
+        user.setFirstName(USER_FIRST_NAME);
+        user.setLastName(USER_LAST_NAME);
 
         userEntity = new UserEntity();
         userEntity.setId(USER_ID);
-        userEntity.setName(USER_NAME);
-        userEntity.setSurname(USER_SURNAME);
+        userEntity.setName(USER_FIRST_NAME);
+        userEntity.setSurname(USER_LAST_NAME);
     }
 
     @Test
-    void shouldCreateUserWhenUserIdValid() {
+    void shouldCreateAndRegisterUserWithIdWhenUserIdValid() {
+        var newUser = new User();
+        newUser.setId(USER_ID);
+        var entityToSave = new UserEntity();
+        var userCreatedEvent = new UserCreatedEvent();
+        var createdUser = new CreatedUser();
+
+        when(repository.existsById(USER_ID)).thenReturn(false);
+        when(mapper.toEntity(newUser)).thenReturn(entityToSave);
+        when(userEventMapper.toUserCreatedEvent(newUser)).thenReturn(userCreatedEvent);
+        when(mapper.toCreatedUser(any(), any())).thenReturn(createdUser);
+
+        CreatedUser result = service.createAndRegister(newUser, "ROLE_USER");
+
+        assertThat(result).isEqualTo(createdUser);
+
+        verify(createUserProducer).send(userCreatedEvent);
+        verify(mapper).toEntity(newUser);
+        verify(repository).insertUser(entityToSave);
+        verify(mapper).toCreatedUser(any(), any());
+    }
+
+    @Test
+    void shouldCreateUserWithIdWhenUserIdValid() {
+        var newUser = new User();
+        newUser.setId(USER_ID);
+        var entityToSave = new UserEntity();
+
+        when(repository.existsById(USER_ID)).thenReturn(false);
+        when(mapper.toEntity(newUser)).thenReturn(entityToSave);
+
+        User result = service.create(newUser);
+
+        assertThat(result).isEqualTo(newUser);
+
+        verify(mapper).toEntity(newUser);
+        verify(repository).insertUser(entityToSave);
+    }
+
+    @Test
+    void shouldCreateUserWithoutIdWhenUserIdValid() {
         var newUser = new User();
         var entityToSave = new UserEntity();
 
-        when(repository.findIdByEmail(user.getEmail())).thenReturn(Optional.empty());
+        when(repository.existsByEmail(user.getEmail())).thenReturn(false);
         when(mapper.toEntity(newUser)).thenReturn(entityToSave);
         when(repository.save(entityToSave)).thenReturn(userEntity);
         when(mapper.toDomain(userEntity)).thenReturn(user);
@@ -74,7 +135,7 @@ class UserServiceImplTest extends CommonUtil {
 
         assertThat(result).isEqualTo(user);
 
-        verify(repository).findIdByEmail(user.getEmail());
+        verify(repository).existsByEmail(user.getEmail());
         verify(mapper).toEntity(newUser);
         verify(repository).save(entityToSave);
         verify(mapper).toDomain(userEntity);
@@ -83,33 +144,23 @@ class UserServiceImplTest extends CommonUtil {
     @Test
     void shouldUpdateUserWhenUserIdValidAndExists() {
         var newUser = new User();
+        newUser.setId(USER_ID);
         var entityToSave = new UserEntity();
+        var userUpdatedEvent = new UserUpdatedEvent();
 
-        when(repository.findIdByEmail(user.getEmail())).thenReturn(Optional.of(USER_ID));
         when(repository.findById(USER_ID)).thenReturn(Optional.of(userEntity));
         when(repository.save(entityToSave)).thenReturn(userEntity);
         when(mapper.toDomain(userEntity)).thenReturn(user);
+        when(userEventMapper.toUserUpdatedEvent(userEntity)).thenReturn(userUpdatedEvent);
 
-        User result = service.create(newUser);
+        User result = service.update(newUser);
 
         assertThat(result).isEqualTo(user);
 
         verify(mapper).updateEntity(user, userEntity);
         verify(repository).save(userEntity);
         verify(mapper).toDomain(userEntity);
-    }
-
-    @Test
-    void shouldThrowResourceForbiddenExceptionWhenCreatingUserWithId() {
-        var newUser = new User();
-        newUser.setId(USER_ID);
-
-        assertThatThrownBy(() -> service.create(newUser))
-                .isInstanceOf(ResourceForbiddenException.class)
-                .hasMessage("User id must be null");
-
-        verify(repository, never()).save(any());
-        verify(mapper, never()).toEntity(any());
+        verify(updateUserProducer).send(userUpdatedEvent);
     }
 
     @Test
@@ -168,7 +219,7 @@ class UserServiceImplTest extends CommonUtil {
         when(repository.findAll(any(Specification.class), eq(pageable))).thenReturn(entityPage);
         when(mapper.toDomain(userEntity)).thenReturn(user);
 
-        Page<User> result = service.findAll(USER_NAME, USER_SURNAME, pageable);
+        Page<User> result = service.findAll(USER_FIRST_NAME, USER_LAST_NAME, pageable);
 
         assertThat(result.getContent()).containsExactly(user);
         assertThat(result.getTotalElements()).isEqualTo(1);
@@ -223,6 +274,7 @@ class UserServiceImplTest extends CommonUtil {
 
         verify(paymentCardRepository).updateActiveStatusByUserId(USER_ID, false);
         verify(repository).updateActiveStatus(USER_ID, false);
+        verify(updateUserStatusProducer).send(new UserStatusUpdatedEvent(USER_ID, false));
     }
 
     @Test
@@ -232,5 +284,6 @@ class UserServiceImplTest extends CommonUtil {
         verify(paymentCardRepository, never()).updateActiveStatusByUserId(any(UUID.class), anyBoolean());
 
         verify(repository).updateActiveStatus(USER_ID, true);
+        verify(updateUserStatusProducer).send(new UserStatusUpdatedEvent(USER_ID, true));
     }
 }

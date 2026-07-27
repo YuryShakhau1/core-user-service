@@ -69,8 +69,8 @@ public class PaymentCardServiceImpl implements PaymentCardService {
     }
 
     @Override
-    public Page<PaymentCard> findAll(String name, String surname, Pageable pageable) {
-        return repository.findAll(PaymentCardSpecifications.withFilters(name, surname), pageable)
+    public Page<PaymentCard> findAll(String firstName, String lastName, Pageable pageable) {
+        return repository.findAll(PaymentCardSpecifications.withFilters(firstName, lastName), pageable)
                 .map(u -> mapper.toDomain(u));
     }
 

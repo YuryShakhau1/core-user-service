@@ -21,9 +21,16 @@ spring:
   jpa:
     show-sql: ${SHOW_SQL:true}
 
+  kafka:
+    producer:
+      properties:
+        max.block.ms: 2000
+        delivery.timeout.ms: 2000
+        request.timeout.ms: 2000
+
 crypto:
   card-secret-key: "${CARD_SECRET_KEY:hfdgchtxbfjvyubjvdsfsdgfdfhgjegj}"
 
 logging:
   level:
-    root: DEBUG
+    root: INFO

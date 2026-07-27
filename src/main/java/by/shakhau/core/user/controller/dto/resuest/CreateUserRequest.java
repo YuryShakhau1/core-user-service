@@ -15,13 +15,13 @@ import java.time.LocalDate;
 @Setter
 public class CreateUserRequest {
 
-    @NotBlank(message = "User name is required")
-    @Size(min = 1, max = 50, message = "User name must be between 1 and 50 characters")
-    private String name;
+    @NotBlank(message = "User first name is required")
+    @Size(min = 1, max = 50, message = "User first name must be between 1 and 50 characters")
+    private String firstName;
 
-    @NotBlank(message = "Surname is required")
-    @Size(min = 1, max = 50, message = "User surname must be between 1 and 50 characters")
-    private String surname;
+    @NotBlank(message = "Last name is required")
+    @Size(min = 1, max = 50, message = "User last name must be between 1 and 50 characters")
+    private String lastName;
 
     @NotNull(message = "Birth date is required")
     @Past(message = "Birth date must be a date in the past")
