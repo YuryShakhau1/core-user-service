@@ -2,11 +2,14 @@ package by.shakhau.core.user.repository.specification;
 
 import by.shakhau.core.user.repository.entity.PaymentCardEntity;
 import jakarta.persistence.criteria.Predicate;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class PaymentCardSpecifications {
 
     public static Specification<PaymentCardEntity> withFilters(String name, String surname) {

@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/${DB_NAME}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: jdbc:postgresql://localhost:5432/${USER_SERVICE_DB_NAME:user_db}
+    username: ${USER_SERVICE_DB_USERNAME:test_user_name}
+    password: ${USER_SERVICE_DB_PASSWORD:test_user_password}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -16,7 +16,7 @@ spring:
     redis:
       host: localhost
       port: 6379
-      password: ${REDIS_SECRET_PASSWORD}
+      password: ${REDIS_SECRET_PASSWORD:redis_test_password}
       entity-ttl: 60
 
   liquibase:
@@ -27,4 +27,4 @@ spring:
     import: optional:file:.env[.properties]
 
 crypto:
-  card-secret-key: "${CARD_SECRET_KEY}"
+  card-secret-key: "${CARD_SECRET_KEY:hfdgchtxbfjvyubjvdsfsdgfdfhgjegj}"

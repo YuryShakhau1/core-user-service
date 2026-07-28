@@ -24,8 +24,8 @@ import java.util.UUID;
 @AllArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    private UserMapper mapper;
-    private UserRepository repository;
+    private final UserMapper mapper;
+    private final UserRepository repository;
 
     private PaymentCardRepository paymentCardRepository;
 
@@ -36,7 +36,12 @@ public class UserServiceImpl implements UserService {
             throw new ResourceForbiddenException("User id must be null");
         }
 
-        return mapper.toDomain(repository.save(mapper.toEntity(user)));
+        return repository.findIdByEmail(user.getEmail())
+                .map(uid -> {
+                    user.setId(uid);
+                    return update(user);
+                })
+                .orElseGet(() -> mapper.toDomain(repository.save(mapper.toEntity(user))));
     }
 
     @Cacheable(value = "users", key = "#id")

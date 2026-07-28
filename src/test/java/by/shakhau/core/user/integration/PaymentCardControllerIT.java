@@ -19,7 +19,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-public class PaymentCardControllerIT extends AbstractIntegrationTest {
+class PaymentCardControllerIT extends AbstractIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -54,12 +54,9 @@ public class PaymentCardControllerIT extends AbstractIntegrationTest {
                                 .content(request))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.id").exists())
-                        .andExpect(jsonPath("$.number")
-                                .value("1234567890123456"))
-                        .andExpect(jsonPath("$.holder")
-                                .value("JOHN DOE"))
-                        .andExpect(jsonPath("$.active")
-                                .value(true))
+                        .andExpect(jsonPath("$.number").value("1234567890123456"))
+                        .andExpect(jsonPath("$.holder").value("JOHN DOE"))
+                        .andExpect(jsonPath("$.active").value(true))
                         .andReturn()
                         .getResponse()
                         .getContentAsString();
@@ -78,12 +75,9 @@ public class PaymentCardControllerIT extends AbstractIntegrationTest {
 
         mockMvc.perform(get("/payment-card/{id}", cardId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id")
-                        .value(cardId.toString()))
-                .andExpect(jsonPath("$.number")
-                        .value("1234567890123456"))
-                .andExpect(jsonPath("$.holder")
-                        .value("JOHN DOE"));
+                .andExpect(jsonPath("$.id").value(cardId.toString()))
+                .andExpect(jsonPath("$.number").value("1234567890123456"))
+                .andExpect(jsonPath("$.holder").value("JOHN DOE"));
     }
 
     @Test
@@ -112,10 +106,8 @@ public class PaymentCardControllerIT extends AbstractIntegrationTest {
                         .param("page", "0")
                         .param("size", "10"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content")
-                        .isArray())
-                .andExpect(jsonPath("$.content[0].holder")
-                        .value("JOHN DOE"));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].holder").value("JOHN DOE"));
     }
 
     @Test
@@ -136,14 +128,10 @@ public class PaymentCardControllerIT extends AbstractIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(request))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id")
-                        .value(cardId.toString()))
-                .andExpect(jsonPath("$.number")
-                        .value("9999888877776666"))
-                .andExpect(jsonPath("$.holder")
-                        .value("PETR PETROV"))
-                .andExpect(jsonPath("$.active")
-                        .value(true));
+                .andExpect(jsonPath("$.id").value(cardId.toString()))
+                .andExpect(jsonPath("$.number").value("9999888877776666"))
+                .andExpect(jsonPath("$.holder").value("PETR PETROV"))
+                .andExpect(jsonPath("$.active").value(true));
 
         var updatedCard = paymentCardRepository.findById(cardId).orElseThrow();
 

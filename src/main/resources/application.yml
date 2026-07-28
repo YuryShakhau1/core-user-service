@@ -8,12 +8,16 @@ spring:
       hibernate:
         format_sql: true
 
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: ${REDIS_SECRET_PASSWORD}
+      entity-ttl: 60
+
   liquibase:
     change-log: classpath:/db/changelog/db.changelog-master.yml
     enabled: true
 
   config:
     import: optional:file:.env[.properties]
-
-crypto:
-  card-secret-key: "${CARD_SECRET_KEY}"

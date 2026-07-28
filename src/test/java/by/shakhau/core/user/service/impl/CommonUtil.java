@@ -7,7 +7,7 @@ import java.util.Random;
 import java.util.UUID;
 
 @ExtendWith(MockitoExtension.class)
-public class CommonTest {
+public class CommonUtil {
 
     private static final Random RANDOM = new Random();
 

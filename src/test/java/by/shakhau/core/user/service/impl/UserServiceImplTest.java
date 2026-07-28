@@ -30,7 +30,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class UserServiceImplTest extends CommonTest {
+class UserServiceImplTest extends CommonUtil {
 
     @Mock
     private UserMapper mapper;
@@ -65,6 +65,7 @@ public class UserServiceImplTest extends CommonTest {
         var newUser = new User();
         var entityToSave = new UserEntity();
 
+        when(repository.findIdByEmail(user.getEmail())).thenReturn(Optional.empty());
         when(mapper.toEntity(newUser)).thenReturn(entityToSave);
         when(repository.save(entityToSave)).thenReturn(userEntity);
         when(mapper.toDomain(userEntity)).thenReturn(user);
@@ -73,8 +74,28 @@ public class UserServiceImplTest extends CommonTest {
 
         assertThat(result).isEqualTo(user);
 
+        verify(repository).findIdByEmail(user.getEmail());
         verify(mapper).toEntity(newUser);
         verify(repository).save(entityToSave);
+        verify(mapper).toDomain(userEntity);
+    }
+
+    @Test
+    void shouldUpdateUserWhenUserIdValidAndExists() {
+        var newUser = new User();
+        var entityToSave = new UserEntity();
+
+        when(repository.findIdByEmail(user.getEmail())).thenReturn(Optional.of(USER_ID));
+        when(repository.findById(USER_ID)).thenReturn(Optional.of(userEntity));
+        when(repository.save(entityToSave)).thenReturn(userEntity);
+        when(mapper.toDomain(userEntity)).thenReturn(user);
+
+        User result = service.create(newUser);
+
+        assertThat(result).isEqualTo(user);
+
+        verify(mapper).updateEntity(user, userEntity);
+        verify(repository).save(userEntity);
         verify(mapper).toDomain(userEntity);
     }
 

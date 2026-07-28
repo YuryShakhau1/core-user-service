@@ -13,6 +13,10 @@ FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
 
+RUN chown -R guest:users /app
+
+USER guest
+
 COPY --from=builder /src/build/libs/*.jar app.jar
 
 EXPOSE 8080
