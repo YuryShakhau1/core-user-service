@@ -3,13 +3,13 @@ package by.shakhau.core.user.messaging.consumer;
 import by.shakhau.core.user.messaging.event.UserRegisteredEvent;
 import by.shakhau.core.user.messaging.mapper.UserEventMapper;
 import by.shakhau.core.user.service.UserService;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
 @Component
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class UserRegistrationConsumer {
 
     private static final String TOPIC = "user.registered";

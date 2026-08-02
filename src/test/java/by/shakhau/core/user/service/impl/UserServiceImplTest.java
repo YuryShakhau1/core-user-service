@@ -10,10 +10,12 @@ import by.shakhau.core.user.messaging.producer.UpdateUserStatusProducer;
 import by.shakhau.core.user.repository.PaymentCardRepository;
 import by.shakhau.core.user.repository.UserRepository;
 import by.shakhau.core.user.repository.entity.UserEntity;
+import by.shakhau.core.user.service.PaymentCardService;
 import by.shakhau.core.user.service.exception.ResourceForbiddenException;
 import by.shakhau.core.user.service.exception.ResourceNotFoundException;
 import by.shakhau.core.user.service.mapper.UserMapper;
 import by.shakhau.core.user.service.model.CreatedUser;
+import by.shakhau.core.user.service.model.PaymentCard;
 import by.shakhau.core.user.service.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -60,7 +62,7 @@ class UserServiceImplTest extends CommonTestUtil {
     private UpdateUserProducer updateUserProducer;
 
     @Mock
-    private PaymentCardRepository paymentCardRepository;
+    private PaymentCardService paymentCardService;
 
     @InjectMocks
     private UserServiceImpl service;
@@ -270,9 +272,12 @@ class UserServiceImplTest extends CommonTestUtil {
 
     @Test
     void shouldDeactivatePaymentCardsWhenUserBecomesInactive() {
+        var paymentCardId = UUID.randomUUID();
+        when(paymentCardService.findIndicesByUserId(USER_ID, true)).thenReturn(List.of(paymentCardId));
+
         service.updateActiveStatus(USER_ID, false);
 
-        verify(paymentCardRepository).updateActiveStatusByUserId(USER_ID, false);
+        verify(paymentCardService).updateActiveStatus(USER_ID, paymentCardId, false);
         verify(repository).updateActiveStatus(USER_ID, false);
         verify(updateUserStatusProducer).send(new UserStatusUpdatedEvent(USER_ID, false));
     }
@@ -281,7 +286,7 @@ class UserServiceImplTest extends CommonTestUtil {
     void shouldNotDeactivatePaymentCardsWhenUserBecomesActive() {
         service.updateActiveStatus(USER_ID, true);
 
-        verify(paymentCardRepository, never()).updateActiveStatusByUserId(any(UUID.class), anyBoolean());
+        verify(paymentCardService, never()).updateActiveStatus(any(), any(), any(boolean.class));
 
         verify(repository).updateActiveStatus(USER_ID, true);
         verify(updateUserStatusProducer).send(new UserStatusUpdatedEvent(USER_ID, true));

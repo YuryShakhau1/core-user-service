@@ -6,10 +6,10 @@ import by.shakhau.core.user.messaging.mapper.UserEventMapper;
 import by.shakhau.core.user.messaging.producer.CreateUserProducer;
 import by.shakhau.core.user.messaging.producer.UpdateUserProducer;
 import by.shakhau.core.user.messaging.producer.UpdateUserStatusProducer;
-import by.shakhau.core.user.repository.PaymentCardRepository;
 import by.shakhau.core.user.repository.UserRepository;
 import by.shakhau.core.user.repository.entity.UserEntity;
 import by.shakhau.core.user.repository.specification.UserSpecifications;
+import by.shakhau.core.user.service.PaymentCardService;
 import by.shakhau.core.user.service.UserService;
 import by.shakhau.core.user.service.exception.ResourceForbiddenException;
 import by.shakhau.core.user.service.exception.ResourceNotFoundException;
@@ -17,7 +17,7 @@ import by.shakhau.core.user.service.mapper.UserMapper;
 import by.shakhau.core.user.service.model.CreatedUser;
 import by.shakhau.core.user.service.model.User;
 import jakarta.transaction.Transactional;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.text.RandomStringGenerator;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
@@ -30,7 +30,7 @@ import java.security.SecureRandom;
 import java.util.UUID;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private final UpdateUserStatusProducer updateUserStatusProducer;
@@ -42,7 +42,7 @@ public class UserServiceImpl implements UserService {
     private final CreateUserProducer createUserProducer;
     private final UpdateUserProducer updateUserProducer;
 
-    private PaymentCardRepository paymentCardRepository;
+    private final PaymentCardService paymentCardService;
 
     @Transactional
     @Override
@@ -120,7 +120,9 @@ public class UserServiceImpl implements UserService {
     @Override
     public void updateActiveStatus(UUID id, boolean active) {
         if (!active) {
-            paymentCardRepository.updateActiveStatusByUserId(id, active);
+            paymentCardService.findIndicesByUserId(id, true).forEach(pcId -> {
+                paymentCardService.updateActiveStatus(id, pcId, active);
+            });
         }
         repository.updateActiveStatus(id, active);
 

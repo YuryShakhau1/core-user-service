@@ -1,5 +1,4 @@
-CREATE TABLE users
-(
+CREATE TABLE IF NOT EXISTS users (
     id         UUID PRIMARY KEY,
     name       VARCHAR(50)  NOT NULL,
     surname    VARCHAR(50)  NOT NULL,
@@ -10,5 +9,5 @@ CREATE TABLE users
     updated_at TIMESTAMP    NOT NULL
 );
 
-CREATE INDEX idx_users_name ON users(name);
-CREATE INDEX idx_users_surname ON users(surname);
+CREATE INDEX IF NOT EXISTS idx_users_name ON users(name);
+CREATE INDEX IF NOT EXISTS idx_users_surname ON users(surname);

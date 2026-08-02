@@ -54,6 +54,38 @@ services:
     volumes:
       - payment_system_kafka_data:/var/lib/kafka/data
 
+  kafka-ui:
+    image: kafbat/kafka-ui:latest
+    container_name: kafka-ui
+    ports:
+      - "8180:8080"
+    depends_on:
+      - kafka
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=local-cluster
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:29092
+
+  core-user-service:
+    image: ghcr.io/yuryshakhau1/core-user-service:latest
+    container_name: core_user_service
+    profiles:
+      - docker
+    ports:
+      - "${USER_SERVICE_PORT}:${USER_SERVICE_PORT}"
+    environment:
+      - USER_SERVICE_PORT=${USER_SERVICE_PORT}
+      - USER_SERVICE_DB_NAME=${USER_SERVICE_DB_NAME}
+      - USER_SERVICE_DB_USERNAME=${USER_SERVICE_DB_USERNAME}
+      - USER_SERVICE_DB_PASSWORD=${USER_SERVICE_DB_PASSWORD}
+      - USER_SERVICE_DB_PORT=${USER_SERVICE_DB_PORT}
+      - KAFKA_HOST_PORT=${KAFKA_HOST_PORT}
+      - CARD_SECRET_KEY=${CARD_SECRET_KEY}
+      - REDIS_SECRET_PASSWORD=${REDIS_SECRET_PASSWORD}
+    depends_on:
+      - user-service-db
+      - redis
+      - kafka
+
 volumes:
   user_service_postgres_data:
   payment_system_redis_data:

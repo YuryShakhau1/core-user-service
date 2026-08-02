@@ -1,8 +1,8 @@
 package by.shakhau.core.user.controller.mapper;
 
 import by.shakhau.core.user.controller.dto.response.UserResponse;
-import by.shakhau.core.user.controller.dto.resuest.CreateUserRequest;
-import by.shakhau.core.user.controller.dto.resuest.UpdateUserRequest;
+import by.shakhau.core.user.controller.dto.request.CreateUserRequest;
+import by.shakhau.core.user.controller.dto.request.UpdateUserRequest;
 import by.shakhau.core.user.service.model.CreatedUser;
 import by.shakhau.core.user.service.model.User;
 import org.mapstruct.Mapper;

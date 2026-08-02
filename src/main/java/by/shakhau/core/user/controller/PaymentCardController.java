@@ -1,25 +1,26 @@
 package by.shakhau.core.user.controller;
 
+import by.shakhau.core.user.controller.dto.request.CreatePaymentCardRequest;
+import by.shakhau.core.user.controller.dto.request.UpdatePaymentCardRequest;
 import by.shakhau.core.user.controller.dto.response.PaymentCardResponse;
-import by.shakhau.core.user.controller.dto.resuest.CreatePaymentCardRequest;
-import by.shakhau.core.user.controller.dto.resuest.UpdatePaymentCardRequest;
+import by.shakhau.core.user.controller.filter.JwtAuthenticationFilter.UserPrincipal;
 import by.shakhau.core.user.controller.mapper.PaymentCardDtoMapper;
 import by.shakhau.core.user.service.PaymentCardService;
 import by.shakhau.core.user.service.UserService;
-import by.shakhau.core.user.service.impl.JwtService;
 import by.shakhau.core.user.service.model.PaymentCard;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,22 +32,12 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
 @RequestMapping("/payment-cards")
-public class PaymentCardController extends AbstractSecurityController {
+@RequiredArgsConstructor
+public class PaymentCardController {
 
     private final PaymentCardDtoMapper mapper;
     private final UserService userService;
     private final PaymentCardService service;
-
-    public PaymentCardController(
-            JwtService jwtService,
-            PaymentCardDtoMapper mapper,
-            UserService userService,
-            PaymentCardService service) {
-        super(jwtService);
-        this.mapper = mapper;
-        this.userService = userService;
-        this.service = service;
-    }
 
     @PostMapping(value = "/users/{userId}", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<PaymentCardResponse> createPaymentCard(
@@ -65,9 +56,9 @@ public class PaymentCardController extends AbstractSecurityController {
 
     @GetMapping(value = "/users/me", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<List<PaymentCardResponse>> findCurrentUserPaymentCards(
-            @RequestHeader("Authorization") String authHeader,
+            @AuthenticationPrincipal UserPrincipal principal,
             @RequestParam(required = false) Boolean active) {
-        UUID userId = findUserId(authHeader);
+        UUID userId = principal.getId();
         List<PaymentCardResponse> paymentCards = service.findByUserId(userId, active).stream()
                 .map(mapper::toPaymentCardResponse)
                 .toList();
@@ -104,10 +95,9 @@ public class PaymentCardController extends AbstractSecurityController {
     }
 
     @PatchMapping(value = "/{id}/status")
-    public ResponseEntity<Void> updatePaymentCardStatus(
-            @PathVariable UUID id, @RequestParam Boolean active) {
+    public ResponseEntity<Void> updatePaymentCardStatus(@PathVariable UUID id, @RequestParam boolean active) {
         UUID userId = userService.findUserIdByCardId(id);
-        service.updateActiveStatus(id, userId, active);
+        service.updateActiveStatus(userId, id, active);
         return ResponseEntity.noContent().build();
     }
 }

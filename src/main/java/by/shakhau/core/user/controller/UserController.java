@@ -1,25 +1,26 @@
 package by.shakhau.core.user.controller;
 
+import by.shakhau.core.user.controller.dto.request.CreateUserRequest;
+import by.shakhau.core.user.controller.dto.request.UpdateUserRequest;
 import by.shakhau.core.user.controller.dto.response.UserResponse;
-import by.shakhau.core.user.controller.dto.resuest.CreateUserRequest;
-import by.shakhau.core.user.controller.dto.resuest.UpdateUserRequest;
+import by.shakhau.core.user.controller.filter.JwtAuthenticationFilter.UserPrincipal;
 import by.shakhau.core.user.controller.mapper.UserDtoMapper;
 import by.shakhau.core.user.service.UserService;
-import by.shakhau.core.user.service.impl.JwtService;
 import by.shakhau.core.user.service.model.CreatedUser;
 import by.shakhau.core.user.service.model.User;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,16 +31,11 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
 @RequestMapping("/users")
-public class UserController extends AbstractSecurityController {
+@RequiredArgsConstructor
+public class UserController {
 
     private final UserDtoMapper mapper;
     private final UserService service;
-
-    public UserController(JwtService jwtService, UserDtoMapper mapper, UserService service) {
-        super(jwtService);
-        this.mapper = mapper;
-        this.service = service;
-    }
 
     @PostMapping(consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<UserResponse> createUser(
@@ -52,8 +48,8 @@ public class UserController extends AbstractSecurityController {
     }
 
     @GetMapping(value = "/me", produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<UserResponse> findCurrentUser(@RequestHeader("Authorization") String authHeader) {
-        UUID userId = findUserId(authHeader);
+    public ResponseEntity<UserResponse> findCurrentUser(@AuthenticationPrincipal UserPrincipal principal) {
+        UUID userId = principal.getId();
         return ResponseEntity.ok(mapper.toUserResponse(service.findById(userId)));
     }
 

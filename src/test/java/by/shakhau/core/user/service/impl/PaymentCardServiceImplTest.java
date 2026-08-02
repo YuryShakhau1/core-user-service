@@ -128,6 +128,32 @@ public class PaymentCardServiceImplTest extends CommonTestUtil {
     }
 
     @Test
+    void shouldReturnActivePaymentCardIndicesWhenActiveFilterIsSpecified() {
+        when(repository.findIndicesByUserIdAndActive(USER_ID, true))
+                .thenReturn(List.of(paymentCardEntity.getId()));
+
+        List<UUID> result = service.findIndicesByUserId(USER_ID, true);
+
+        assertThat(result).containsExactly(paymentCard.getId());
+
+        verify(repository).findIndicesByUserIdAndActive(USER_ID, true);
+        verify(repository, never()).findAllByUserId(any(UUID.class));
+    }
+
+    @Test
+    void shouldReturnActivePaymentCardIndicesWhenActiveFilterIsNotSpecified() {
+        when(repository.findIndicesByUserId(USER_ID))
+                .thenReturn(List.of(paymentCardEntity.getId()));
+
+        List<UUID> result = service.findIndicesByUserId(USER_ID, null);
+
+        assertThat(result).containsExactly(paymentCard.getId());
+
+        verify(repository).findIndicesByUserId(USER_ID);
+        verify(repository, never()).findAllByUserId(any(UUID.class));
+    }
+
+    @Test
     void shouldReturnActivePaymentCardsWhenActiveFilterIsSpecified() {
         when(repository.findAllByUserIdAndActive(USER_ID, true))
                 .thenReturn(List.of(paymentCardEntity));
@@ -220,8 +246,8 @@ public class PaymentCardServiceImplTest extends CommonTestUtil {
 
     @Test
     void shouldUpdatePaymentCardActiveStatus() {
-        service.updateActiveStatus(CARD_ID, USER_ID, false);
+        service.updateActiveStatus(USER_ID, CARD_ID, false);
 
-        verify(repository).updateActiveStatus(CARD_ID, false);
+        verify(repository).updateActiveStatus(USER_ID, CARD_ID, false);
     }
 }

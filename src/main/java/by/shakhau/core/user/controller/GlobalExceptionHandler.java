@@ -5,6 +5,7 @@ import by.shakhau.core.user.service.exception.ResourceForbiddenException;
 import by.shakhau.core.user.service.exception.ResourceNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.NonTransientDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,10 +26,16 @@ public class GlobalExceptionHandler {
 
     private static final Map<Class<? extends Exception>, HttpStatus> RESPONSE_STATUSES = new HashMap<>();
 
+    private final boolean localProfile;
+
+    public GlobalExceptionHandler(@Value("${spring.profiles.active}") String activeProfile) {
+        this.localProfile = "local".equals(activeProfile);
+    }
+
     static {
         RESPONSE_STATUSES.put(ResourceNotFoundException.class, HttpStatus.NOT_FOUND);
         RESPONSE_STATUSES.put(ResourceForbiddenException.class, HttpStatus.FORBIDDEN);
-        RESPONSE_STATUSES.put(NonTransientDataAccessException.class, HttpStatus.FORBIDDEN);
+        RESPONSE_STATUSES.put(NonTransientDataAccessException.class, HttpStatus.INTERNAL_SERVER_ERROR);
         RESPONSE_STATUSES.put(MethodValidationException.class, HttpStatus.BAD_REQUEST);
         RESPONSE_STATUSES.put(MethodArgumentNotValidException.class, HttpStatus.BAD_REQUEST);
         RESPONSE_STATUSES.put(HandlerMethodValidationException.class, HttpStatus.BAD_REQUEST);
@@ -41,10 +48,15 @@ public class GlobalExceptionHandler {
         if (status.is5xxServerError()) {
             log.error("Status: {}, request: {}, exception message: {}",
                     status.value(), request.getRequestURI(), exception.getMessage(), exception);
-        } else {
-            log.warn("Status: {}, request: {}, exception message: {}",
-                    status.value(), request.getRequestURI(), exception.getMessage());
+            if (localProfile) {
+                return buildErrorResponse(status, exception, request);
+            }
+
+            return buildErrorResponse(status, "Server error", request);
         }
+
+        log.warn("Status: {}, request: {}, exception message: {}",
+                status.value(), request.getRequestURI(), exception.getMessage());
 
         return buildErrorResponse(status, exception, request);
     }
@@ -61,16 +73,21 @@ public class GlobalExceptionHandler {
     }
 
     private ResponseEntity<ErrorResponse> buildErrorResponse(
-            HttpStatus status, Exception exception, HttpServletRequest request) {
+            HttpStatus status, String message, HttpServletRequest request) {
 
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now(ZoneOffset.UTC))
                 .status(status.value())
                 .error(status.getReasonPhrase())
-                .message(exception.getMessage())
+                .message(message)
                 .path(request.getRequestURI())
                 .build();
 
         return ResponseEntity.status(status).body(errorResponse);
+    }
+
+    private ResponseEntity<ErrorResponse> buildErrorResponse(
+            HttpStatus status, Exception exception, HttpServletRequest request) {
+        return buildErrorResponse(status, exception.getMessage(), request);
     }
 }

@@ -1,4 +1,4 @@
-package by.shakhau.core.user.controller.dto.resuest;
+package by.shakhau.core.user.controller.dto.request;
 
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotBlank;
@@ -13,7 +13,7 @@ import java.time.LocalDate;
 
 @Getter
 @Setter
-public class UpdatePaymentCardRequest {
+public class CreatePaymentCardRequest {
 
     @NotBlank(message = "Card number is required")
     @Pattern(regexp = "^\\d{16}$", message = "Card number must contain exactly 16 digits")
@@ -27,4 +27,7 @@ public class UpdatePaymentCardRequest {
     @FutureOrPresent(message = "The card expiration date must be in the future")
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate expirationDate;
+
+    @NotNull(message = "Active status is required")
+    private Boolean active;
 }

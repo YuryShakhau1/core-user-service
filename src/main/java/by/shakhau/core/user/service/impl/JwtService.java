@@ -3,30 +3,46 @@ package by.shakhau.core.user.service.impl;
 import by.shakhau.core.user.config.SecurityProps;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Service;
 
-import javax.crypto.SecretKey;
-import java.nio.charset.StandardCharsets;
+import java.security.KeyFactory;
+import java.security.PublicKey;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
 
 @Service
 public class JwtService {
 
-    private final SecretKey secretKey;
+    private final PublicKey publicKey;
 
     public JwtService(SecurityProps securityProps) {
-        this.secretKey = Keys.hmacShaKeyFor(securityProps.getSecret().getBytes(StandardCharsets.UTF_8));
+        this.publicKey = parsePublicKey(securityProps.getPublicKeyContent());
     }
 
     public Claims getClaims(String token) {
         try {
             return Jwts.parser()
-                    .verifyWith(secretKey)
+                    .verifyWith(publicKey)
                     .build()
                     .parseSignedClaims(token)
                     .getPayload();
         } catch (Exception e) {
             return null;
+        }
+    }
+
+    private PublicKey parsePublicKey(String rsaPublicKey) {
+        try {
+            String cleanKey = rsaPublicKey
+                    .replace("-----BEGIN PUBLIC KEY-----", "")
+                    .replace("-----END PUBLIC KEY-----", "")
+                    .replaceAll("\\s+", "");
+            byte[] publicKeyBytes = Base64.getDecoder().decode(cleanKey);
+            var keySpec = new X509EncodedKeySpec(publicKeyBytes);
+            KeyFactory kf = KeyFactory.getInstance("RSA");
+            return kf.generatePublic(keySpec);
+        } catch (Exception e) {
+            throw new IllegalStateException("Could not parse public RSA key", e);
         }
     }
 }

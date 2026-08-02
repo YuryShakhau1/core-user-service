@@ -8,8 +8,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -24,15 +24,15 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Component
 public class JwtAuthenticationFilter implements Filter {
 
-    private JwtService jwtService;
+    private final JwtService jwtService;
 
-    @AllArgsConstructor
+    @RequiredArgsConstructor
     @Getter
-    private static class UserPrincipal implements UserDetails {
+    public static class UserPrincipal implements UserDetails {
 
         private final UUID id;
         private final Collection<? extends GrantedAuthority> authorities;

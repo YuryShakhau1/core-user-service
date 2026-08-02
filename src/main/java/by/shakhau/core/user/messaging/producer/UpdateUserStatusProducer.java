@@ -2,12 +2,12 @@ package by.shakhau.core.user.messaging.producer;
 
 import by.shakhau.core.user.messaging.event.UserStatusUpdatedEvent;
 import by.shakhau.core.user.messaging.exception.KafkaConnectionException;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class UpdateUserStatusProducer {
 
     private static final String TOPIC = "user.status.updated";

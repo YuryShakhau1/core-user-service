@@ -5,24 +5,33 @@ import jakarta.persistence.Converter;
 import org.springframework.beans.factory.annotation.Value;
 
 import javax.crypto.Cipher;
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import java.nio.ByteBuffer;
+import java.security.SecureRandom;
 import java.util.Base64;
 
 @Converter
 public class EncryptStringConverter implements AttributeConverter<String, String> {
 
     private static final String CRYPTO_STANDARD = "AES";
-    private static final String ALGORITHM = CRYPTO_STANDARD + "/ECB/PKCS5Padding";
+    private static final String ALGORITHM = CRYPTO_STANDARD + "/GCM/NoPadding";
+
+    private static final int IV_LENGTH_BYTES = 12;
+    private static final int TAG_LENGTH_BITS = 128;
 
     private final SecretKeySpec secretKey;
+    private final SecureRandom secureRandom = new SecureRandom();
 
-    public EncryptStringConverter(@Value("${crypto.card-secret-key}") String secretKeyValue) {
-        if (secretKeyValue.length() != 32) {
+    public EncryptStringConverter(@Value("${crypto.card-secret-key}") String secretKeyValueBase64) {
+        byte[] keyBytes = Base64.getDecoder().decode(secretKeyValueBase64);
+
+        if (keyBytes.length != 32) {
             throw new IllegalArgumentException(
-                    "Key length must be 32 symbols. Current length is %d symbols".formatted(secretKeyValue.length()));
+                    "Key length must be 32 bytes (256 bits). Current length is %d bytes".formatted(keyBytes.length));
         }
 
-        secretKey = new SecretKeySpec(secretKeyValue.getBytes(), CRYPTO_STANDARD);
+        this.secretKey = new SecretKeySpec(keyBytes, CRYPTO_STANDARD);
     }
 
     @Override
@@ -32,9 +41,21 @@ public class EncryptStringConverter implements AttributeConverter<String, String
         }
 
         try {
+            var iv = new byte[IV_LENGTH_BYTES];
+            secureRandom.nextBytes(iv);
+
             Cipher cipher = Cipher.getInstance(ALGORITHM);
-            cipher.init(Cipher.ENCRYPT_MODE, secretKey);
-            return Base64.getEncoder().encodeToString(cipher.doFinal(attribute.getBytes()));
+            var parameterSpec = new GCMParameterSpec(TAG_LENGTH_BITS, iv);
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey, parameterSpec);
+
+            byte[] ciphertext = cipher.doFinal(attribute.getBytes());
+
+            byte[] encryptedBuffer = ByteBuffer.allocate(iv.length + ciphertext.length)
+                    .put(iv)
+                    .put(ciphertext)
+                    .array();
+
+            return Base64.getEncoder().encodeToString(encryptedBuffer);
         } catch (Exception e) {
             throw new RuntimeException("Field encryption error", e);
         }
@@ -47,9 +68,20 @@ public class EncryptStringConverter implements AttributeConverter<String, String
         }
 
         try {
+            byte[] encryptedBuffer = Base64.getDecoder().decode(dbData);
+
+            ByteBuffer byteBuffer = ByteBuffer.wrap(encryptedBuffer);
+            byte[] iv = new byte[IV_LENGTH_BYTES];
+            byteBuffer.get(iv);
+
+            byte[] ciphertext = new byte[byteBuffer.remaining()];
+            byteBuffer.get(ciphertext);
+
             Cipher cipher = Cipher.getInstance(ALGORITHM);
-            cipher.init(Cipher.DECRYPT_MODE, secretKey);
-            return new String(cipher.doFinal(Base64.getDecoder().decode(dbData)));
+            GCMParameterSpec parameterSpec = new GCMParameterSpec(TAG_LENGTH_BITS, iv);
+            cipher.init(Cipher.DECRYPT_MODE, secretKey, parameterSpec);
+
+            return new String(cipher.doFinal(ciphertext));
         } catch (Exception e) {
             throw new RuntimeException("Field decryption error", e);
         }

@@ -1,10 +1,8 @@
 package by.shakhau.core.user.service.mapper;
 
-import by.shakhau.core.user.repository.entity.PaymentCardEntity;
 import by.shakhau.core.user.repository.entity.UserEntity;
 import by.shakhau.core.user.service.model.CreatedUser;
 import by.shakhau.core.user.service.model.User;
-import org.mapstruct.AfterMapping;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -31,11 +29,4 @@ public interface UserMapper {
     @Mapping(source = "lastName", target = "surname")
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateEntity(User user, @MappingTarget UserEntity entity);
-
-    @AfterMapping
-    default void linkCardBackReference(@MappingTarget UserEntity user) {
-        for (PaymentCardEntity paymentCard : user.getPaymentCards()) {
-            paymentCard.setUser(user);
-        }
-    }
 }

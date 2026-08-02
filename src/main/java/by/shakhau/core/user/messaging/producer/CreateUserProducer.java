@@ -3,12 +3,12 @@ package by.shakhau.core.user.messaging.producer;
 import by.shakhau.core.user.messaging.event.UserCreatedEvent;
 import by.shakhau.core.user.messaging.event.UserRegisteredEvent;
 import by.shakhau.core.user.messaging.exception.KafkaConnectionException;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class CreateUserProducer {
 
     private static final String TOPIC = "user.created";

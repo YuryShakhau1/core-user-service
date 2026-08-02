@@ -21,7 +21,7 @@ public class PaymentCardSpecifications {
             }
 
             if (lastName != null && !lastName.isBlank()) {
-                return cb.like(cb.lower(root.get("user").get("surname")), lastName.toLowerCase() + "%");
+                predicates.add(cb.like(cb.lower(root.get("user").get("surname")), lastName.toLowerCase() + "%"));
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));

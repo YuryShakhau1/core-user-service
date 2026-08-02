@@ -15,7 +15,7 @@ The microservice application processes operations with users and user payment ca
 | `SHOW_SQL`                 | Boolean | Not mandatory parameter to allow show sql queries in debug only    |
 | `CARD_SECRET_KEY`          | Boolean | 32 symblos secret password to encrypt/dercypt payment card numbers |
 | `REDIS_SECRET_PASSWORD`    | String  | Redis password                                                     |
-| `KAFKA_HOST_POST`          | String  | Kafka host:port                                                    |
+| `KAFKA_HOST_PORT`          | String  | Kafka host:port                                                    |
 
 
 ## Tables
@@ -63,7 +63,7 @@ USER_SERVICE_DB_USERNAME=Username
 USER_SERVICE_DB_PASSWORD=Password
 USER_SERVICE_DB_PORT=5432
 
-KAFKA_HOST_POST=localhost:9092
+KAFKA_HOST_PORT=localhost:9092
 
 SHOW_SQL=true
 
@@ -76,9 +76,9 @@ docker-compose example
 
 ```yaml
 services:
-  postgres:
+  user-service-db:
     image: postgres:18-alpine
-    container_name: postgres_container
+    container_name: user_service_postgres
     environment:
       - POSTGRES_DB=${USER_SERVICE_DB_NAME}
       - POSTGRES_USER=${USER_SERVICE_DB_USERNAME}
@@ -87,7 +87,7 @@ services:
     ports:
       - "${USER_SERVICE_DB_PORT}:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - user_service_postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 10s
@@ -102,26 +102,71 @@ services:
       - "6379:6379"
     command: redis-server --requirepass ${REDIS_SECRET_PASSWORD}
     volumes:
-      - redis_data:/data
+      - payment_system_redis_data:/data
     restart: always
 
-  core-user-service:
-    image: ghcr.io/yuryshakhau1/core-user-service:latest
+  kafka:
+    image: apache/kafka:4.0.2
+    container_name: kafka
     ports:
-      - "8080:8080"
+      - "9092:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:29093'
+
+      KAFKA_NUM_PARTITIONS: 4
+
+      KAFKA_LISTENERS: 'CLIENT://0.0.0.0:9092,INTERNAL://0.0.0.0:29092,CONTROLLER://0.0.0.0:29093'
+      KAFKA_ADVERTISED_LISTENERS: 'CLIENT://localhost:9092,INTERNAL://kafka:29092'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CLIENT:PLAINTEXT,INTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'INTERNAL'
+
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    volumes:
+      - payment_system_kafka_data:/var/lib/kafka/data
+
+  kafka-ui:
+    image: kafbat/kafka-ui:latest
+    container_name: kafka-ui
+    ports:
+      - "8180:8080"
+    depends_on:
+      - kafka
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=local-cluster
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:29092
+
+  user-core-service:
+    image: ghcr.io/yuryshakhau1/core-user-service:latest
+    container_name: user_core_service
+    profiles:
+      - docker
+    ports:
+      - "${USER_SERVICE_PORT}:${USER_SERVICE_PORT}"
     environment:
       - USER_SERVICE_PORT=${USER_SERVICE_PORT}
       - USER_SERVICE_DB_NAME=${USER_SERVICE_DB_NAME}
-      - USER_SERVICE_DB_PORT=${USER_SERVICE_DB_PORT}
       - USER_SERVICE_DB_USERNAME=${USER_SERVICE_DB_USERNAME}
       - USER_SERVICE_DB_PASSWORD=${USER_SERVICE_DB_PASSWORD}
-      - REDIS_SECRET_PASSWORD=${REDIS_SECRET_PASSWORD}
+      - USER_SERVICE_DB_PORT=${USER_SERVICE_DB_PORT}
+      - KAFKA_HOST_PORT=${KAFKA_HOST_PORT}
       - CARD_SECRET_KEY=${CARD_SECRET_KEY}
-      - KAFKA_HOST_POST=${KAFKA_HOST_POST}
+      - REDIS_SECRET_PASSWORD=${REDIS_SECRET_PASSWORD}
+    depends_on:
+      - user-service-db
+      - redis
+      - kafka
 
 volumes:
-  postgres_data:
-  redis_data:
+  user_service_postgres_data:
+  payment_system_redis_data:
+  payment_system_kafka_data:
 ```
 
 ##  REST endpoints

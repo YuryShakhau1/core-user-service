@@ -43,10 +43,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public abstract class AbstractIntegrationTest {
 
     protected static final String AUTHORIZATION_HEADER = "Bearer 123";
-    protected static final String USER_ID = UUID.randomUUID().toString();
+
+    private UUID userId;
 
     @MockitoBean
-    private JwtService jwtService;
+    protected JwtService jwtService;
 
     @MockitoBean
     private CreateUserProducer createUserProducer;
@@ -89,18 +90,24 @@ public abstract class AbstractIntegrationTest {
         redis.start();
     }
 
+    public UUID getUserId() {
+        return userId;
+    }
+
     @BeforeEach
-    public void setUp() {
+    public void setUp() throws Exception {
+        Claims claims = mock(Claims.class);
+        when(claims.getExpiration()).thenReturn(new Date(System.currentTimeMillis() + 1000000));
+        when((List<String>) claims.get("roles")).thenReturn(Collections.singletonList("ROLE_ADMIN"));
+        when(jwtService.getClaims(any())).thenReturn(claims);
+        when(claims.getSubject()).thenReturn(UUID.randomUUID().toString());
+
         paymentCardRepository.deleteAll();
         userRepository.deleteAll();
         cacheManager.getCacheNames().forEach(cacheName -> cacheManager.getCache(cacheName).clear());
+        userId = createUser();
 
-        Claims claims = mock(Claims.class);
-
-        when(claims.getExpiration()).thenReturn(new Date(System.currentTimeMillis() + 1000000));
-        when(claims.getSubject()).thenReturn(USER_ID);
-        when((List<String>) claims.get("roles")).thenReturn(Collections.singletonList("ROLE_ADMIN"));
-        when(jwtService.getClaims(any())).thenReturn(claims);
+        when(claims.getSubject()).thenReturn(userId.toString());
     }
 
     @DynamicPropertySource

@@ -9,8 +9,6 @@ import java.util.UUID;
 @ExtendWith(MockitoExtension.class)
 public class CommonTestUtil {
 
-    private static final Random RANDOM = new Random();
-
     protected static final UUID USER_ID = UUID.randomUUID();
     protected static final UUID CARD_ID = UUID.randomUUID();
 

@@ -16,7 +16,7 @@ spring:
       entity-ttl: 60
 
   kafka:
-    bootstrap-servers: ${KAFKA_HOST_POST}
+    bootstrap-servers: ${KAFKA_HOST_PORT}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
@@ -28,14 +28,11 @@ spring:
       immediate-stop: true
 
   jwt:
-    secret: ${JWT_SECRET}
-    access-expiration: 900
-    refresh-expiration: 86400
-    max-session-count: 5
+    public-key: "classpath:certs/public_key.pem"
 
   liquibase:
     change-log: classpath:/db/changelog/db.changelog-master.yml
     enabled: true
 
   config:
-    import: optional:file:.env[.properties]
+    import: optional:file:../.env[.properties]

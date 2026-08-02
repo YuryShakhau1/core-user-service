@@ -11,7 +11,7 @@ import by.shakhau.core.user.service.exception.ResourceNotFoundException;
 import by.shakhau.core.user.service.mapper.PaymentCardMapper;
 import by.shakhau.core.user.service.model.PaymentCard;
 import jakarta.transaction.Transactional;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
@@ -25,12 +25,12 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class PaymentCardServiceImpl implements PaymentCardService {
 
-    private PaymentCardMapper mapper;
-    private PaymentCardRepository repository;
-    private UserRepository userRepository;
+    private final PaymentCardMapper mapper;
+    private final PaymentCardRepository repository;
+    private final UserRepository userRepository;
 
     @Transactional
     @Override
@@ -51,6 +51,16 @@ public class PaymentCardServiceImpl implements PaymentCardService {
     public PaymentCard findById(UUID id) {
         return mapper.toDomain(repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment card with id = %s not found".formatted(id))));
+    }
+
+    @Cacheable(value = "user-cards", key = "#userId + '-' + #active")
+    @Override
+    public List<UUID> findIndicesByUserId(UUID userId, Boolean active) {
+        if (active != null) {
+            return repository.findIndicesByUserIdAndActive(userId, active);
+        }
+
+        return repository.findIndicesByUserId(userId);
     }
 
     @Cacheable(value = "user-cards", key = "#userId + '-' + #active")
@@ -103,8 +113,8 @@ public class PaymentCardServiceImpl implements PaymentCardService {
     })
     @Transactional
     @Override
-    public void updateActiveStatus(UUID id, UUID userId, boolean active) {
-        repository.updateActiveStatus(id, active);
+    public void updateActiveStatus(UUID userId, UUID id, boolean active) {
+        repository.updateActiveStatus(userId, id, active);
     }
 
     private PaymentCard save(UUID userId, PaymentCardEntity paymentCardEntity) {
