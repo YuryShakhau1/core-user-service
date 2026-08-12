@@ -10,7 +10,7 @@ import java.util.UUID;
 public interface PaymentCardService {
 
     PaymentCard create(UUID userId, PaymentCard paymentCard);
-    PaymentCard findById(UUID id);
+    PaymentCard findByIdAndUserId(UUID id, UUID userId);
     List<UUID> findIndicesByUserId(UUID userId, Boolean active);
     List<PaymentCard> findByUserId(UUID userId, Boolean active);
     Page<PaymentCard> findAll(String firstName, String lastName, Pageable pageable);

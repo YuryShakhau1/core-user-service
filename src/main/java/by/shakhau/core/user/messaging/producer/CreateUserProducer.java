@@ -1,7 +1,6 @@
 package by.shakhau.core.user.messaging.producer;
 
 import by.shakhau.core.user.messaging.event.UserCreatedEvent;
-import by.shakhau.core.user.messaging.event.UserRegisteredEvent;
 import by.shakhau.core.user.messaging.exception.KafkaConnectionException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -12,7 +11,7 @@ import org.springframework.stereotype.Component;
 public class CreateUserProducer {
 
     private static final String TOPIC = "user.created";
-    private KafkaTemplate<String, UserCreatedEvent> template;
+    private final KafkaTemplate<String, UserCreatedEvent> template;
 
     public void send(UserCreatedEvent event) {
         try {

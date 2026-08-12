@@ -1,7 +1,6 @@
 package by.shakhau.core.user.messaging.mapper;
 
 import by.shakhau.core.user.messaging.event.UserCreatedEvent;
-import by.shakhau.core.user.messaging.event.UserRegisteredEvent;
 import by.shakhau.core.user.messaging.event.UserUpdatedEvent;
 import by.shakhau.core.user.repository.entity.UserEntity;
 import by.shakhau.core.user.service.model.User;
@@ -11,9 +10,6 @@ import org.mapstruct.ReportingPolicy;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface UserEventMapper {
-
-    @Mapping(source = "userId", target = "id")
-    User toUser(UserRegisteredEvent event);
 
     @Mapping(source = "id", target = "userId")
     UserCreatedEvent toUserCreatedEvent(User user);

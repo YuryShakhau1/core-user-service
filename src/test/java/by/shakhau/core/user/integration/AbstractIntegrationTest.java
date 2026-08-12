@@ -40,8 +40,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public abstract class AbstractIntegrationTest {
 
-    protected static final String AUTHORIZATION_HEADER = "Bearer 123";
-
     private UUID userId;
 
     @MockitoBean
@@ -120,7 +118,6 @@ public abstract class AbstractIntegrationTest {
 
         String response =
                 mockMvc.perform(post("/users")
-                                .header(AUTHORIZATION, AUTHORIZATION_HEADER)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .param("role", "ROLE_ADMIN")
                                 .content(request))

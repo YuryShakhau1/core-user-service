@@ -48,8 +48,8 @@ public class PaymentCardServiceImpl implements PaymentCardService {
 
     @Cacheable(value = "payment-cards", key = "#id")
     @Override
-    public PaymentCard findById(UUID id) {
-        return mapper.toDomain(repository.findById(id)
+    public PaymentCard findByIdAndUserId(UUID id, UUID userId) {
+        return mapper.toDomain(repository.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment card with id = %s not found".formatted(id))));
     }
 

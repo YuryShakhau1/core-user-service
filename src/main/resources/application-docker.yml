@@ -29,7 +29,7 @@ spring:
         request.timeout.ms: 5000
 
 crypto:
-  card-secret-key: "${CARD_SECRET_KEY}"
+  card-secret-key: ${CARD_SECRET_KEY}
 
 logging:
   level:

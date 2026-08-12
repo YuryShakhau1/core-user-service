@@ -110,19 +110,19 @@ public class PaymentCardServiceImplTest extends CommonTestUtil {
 
     @Test
     void shouldReturnPaymentCardWhenCardExists() {
-        when(repository.findById(CARD_ID)).thenReturn(Optional.of(paymentCardEntity));
+        when(repository.findByIdAndUserId(CARD_ID, USER_ID)).thenReturn(Optional.of(paymentCardEntity));
         when(mapper.toDomain(paymentCardEntity)).thenReturn(paymentCard);
 
-        PaymentCard result = service.findById(CARD_ID);
+        PaymentCard result = service.findByIdAndUserId(CARD_ID, USER_ID);
 
         assertThat(result).isEqualTo(paymentCard);
     }
 
     @Test
     void shouldThrowResourceNotFoundExceptionWhenCardDoesNotExist() {
-        when(repository.findById(CARD_ID)).thenReturn(Optional.empty());
+        when(repository.findByIdAndUserId(CARD_ID, USER_ID)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.findById(CARD_ID))
+        assertThatThrownBy(() -> service.findByIdAndUserId(CARD_ID, USER_ID))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Payment card with id = %s not found".formatted(CARD_ID));
     }

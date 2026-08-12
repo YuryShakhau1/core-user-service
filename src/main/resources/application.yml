@@ -33,3 +33,6 @@ spring:
 
   config:
     import: optional:file:../.env[.properties]
+
+app:
+  admin-init-secret: ${ADMIN_INIT_SECRET}

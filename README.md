@@ -212,6 +212,38 @@ POST /users
 
 ---
 
+### 2. Create administrator.
+
+Rest endpoint to register new administrator.
+
+POST /users/create-admin
+
+```json
+{
+  "firstName": "<user_first_name>",
+  "lastName": "<user_last_name>",
+  "birthDate": "<user_birth_date> in yyyy-MM-dd format",
+  "email": "<user_email>",
+  "active": "<true_or_false_user_status>",
+  "adminInitSecret": "<admin_secret>"
+}
+```
+
+* **Success (201 Created):**
+```json
+{
+  "id": "<user_id_uuid>",
+  "firstName": "<user_first_name>",
+  "lastName": "<user_last_name>",
+  "birthDate": "<user_birth_date> in yyyy-MM-dd format",
+  "email": "<user_email>",
+  "active": "<true_or_false_user_status>",
+  "tempPassword": "<user_temp_password> user must change in to have capability of receiving access_token"
+}
+```
+
+---
+
 ### 2. Get current user info.
 
 GET /users/me  

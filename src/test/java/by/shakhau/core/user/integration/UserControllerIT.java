@@ -13,7 +13,6 @@ import java.util.UUID;
 import static by.shakhau.core.user.controller.filter.AuthenticationFilter.SESSION_ID_HEADER;
 import static by.shakhau.core.user.controller.filter.AuthenticationFilter.USER_ID_HEADER;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -46,7 +45,6 @@ class UserControllerIT extends AbstractIntegrationTest {
 
         String response =
                 mockMvc.perform(post("/users")
-                                .header(AUTHORIZATION, AUTHORIZATION_HEADER)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .param("role", "ROLE_ADMIN")
                                 .content(request))
@@ -68,11 +66,65 @@ class UserControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    void shouldCreateAdmin() throws Exception {
+        String request = """
+                {
+                    "firstName": "John",
+                    "lastName": "Doe",
+                    "birthDate": "1995-05-10",
+                    "email": "john@mail.com",
+                    "active": true,
+                    "adminInitSecret": "testAdminInitSecret"
+                }
+                """;
+
+        String response =
+                mockMvc.perform(post("/users/create-admin")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .param("role", "ROLE_ADMIN")
+                                .content(request))
+                        .andExpect(status().isCreated())
+                        .andExpect(jsonPath("$.id").exists())
+                        .andExpect(jsonPath("$.firstName").value("John"))
+                        .andExpect(jsonPath("$.lastName").value("Doe"))
+                        .andExpect(jsonPath("$.birthDate").value("1995-05-10"))
+                        .andExpect(jsonPath("$.email").value("john@mail.com"))
+                        .andExpect(jsonPath("$.active").value(true))
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
+
+        JsonNode json = objectMapper.readTree(response);
+        UUID id = UUID.fromString(json.get("id").asText());
+
+        assertThat(userRepository.findById(id)).isPresent();
+    }
+
+    @Test
+    void shouldRejectCreateAdminWithWrongSecret() throws Exception {
+        String request = """
+                {
+                    "firstName": "John",
+                    "lastName": "Doe",
+                    "birthDate": "1995-05-10",
+                    "email": "john@mail.com",
+                    "active": true,
+                    "adminInitSecret": "testWrongAdminInitSecret"
+                }
+                """;
+
+        mockMvc.perform(post("/users/create-admin")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .param("role", "ROLE_ADMIN")
+                        .content(request))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     void shouldFindUserByIdWhenUserExists() throws Exception {
         UUID id = getUserId();
 
-        mockMvc.perform(get("/users/{id}", id)
-                        .header(AUTHORIZATION, AUTHORIZATION_HEADER))
+        mockMvc.perform(get("/users/{id}", id))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(id.toString()))
                 .andExpect(jsonPath("$.firstName").value("John"))
@@ -96,15 +148,13 @@ class UserControllerIT extends AbstractIntegrationTest {
 
     @Test
     void shouldReturnNotFoundWhenUserDoesNotExist() throws Exception {
-        mockMvc.perform(get("/users/{id}", UUID.randomUUID())
-                        .header(AUTHORIZATION, AUTHORIZATION_HEADER))
+        mockMvc.perform(get("/users/{id}", UUID.randomUUID()))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     void shouldFindUsersWhenUsersExist() throws Exception {
         mockMvc.perform(get("/users")
-                        .header(AUTHORIZATION, AUTHORIZATION_HEADER)
                         .param("page", "0")
                         .param("size", "10"))
                 .andExpect(status().isOk())
@@ -127,7 +177,6 @@ class UserControllerIT extends AbstractIntegrationTest {
                 """.formatted(id);
 
         mockMvc.perform(put("/users/{id}", id)
-                        .header(AUTHORIZATION, AUTHORIZATION_HEADER)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(request))
                 .andExpect(status().isOk())
@@ -147,7 +196,6 @@ class UserControllerIT extends AbstractIntegrationTest {
         UUID id = getUserId();
 
         mockMvc.perform(patch("/users/{id}", id)
-                        .header(AUTHORIZATION, AUTHORIZATION_HEADER)
                         .param("active", "false"))
                 .andExpect(status().isNoContent());
 
@@ -171,7 +219,6 @@ class UserControllerIT extends AbstractIntegrationTest {
                 """;
 
         mockMvc.perform(post("/users")
-                        .header(AUTHORIZATION, AUTHORIZATION_HEADER)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(request))
                 .andExpect(status().isBadRequest());
@@ -181,8 +228,7 @@ class UserControllerIT extends AbstractIntegrationTest {
     void shouldEvictCacheWhenUserStatusIsUpdated() throws Exception {
         UUID id = getUserId();
 
-        mockMvc.perform(get("/users/{id}", id)
-                        .header(AUTHORIZATION, AUTHORIZATION_HEADER))
+        mockMvc.perform(get("/users/{id}", id))
                 .andExpect(status().isOk());
 
         var cache = cacheManager.getCache("users");
@@ -190,7 +236,6 @@ class UserControllerIT extends AbstractIntegrationTest {
         assertThat(cache.get(id)).isNotNull();
 
         mockMvc.perform(patch("/users/{id}", id)
-                        .header(AUTHORIZATION, AUTHORIZATION_HEADER)
                         .param("active", "false"))
                 .andExpect(status().isNoContent());
 
@@ -209,7 +254,6 @@ class UserControllerIT extends AbstractIntegrationTest {
                 }
                 """;
         mockMvc.perform(post("/users")
-                        .header(AUTHORIZATION, AUTHORIZATION_HEADER)
                         .contentType(MediaType.APPLICATION_JSON)
                         .param("role", "ROLE_USER")
                         .content(requestJohnSmith))
@@ -225,14 +269,12 @@ class UserControllerIT extends AbstractIntegrationTest {
                 }
                 """;
         mockMvc.perform(post("/users")
-                        .header(AUTHORIZATION, AUTHORIZATION_HEADER)
                         .contentType(MediaType.APPLICATION_JSON)
                         .param("role", "ROLE_USER")
                         .content(requestAnnaDoe))
                 .andExpect(status().isCreated());
 
         mockMvc.perform(get("/users")
-                        .header(AUTHORIZATION, AUTHORIZATION_HEADER)
                         .param("firstName", "John")
                         .param("lastName", "Doe")
                         .param("page", "0")

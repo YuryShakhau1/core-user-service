@@ -7,12 +7,15 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface PaymentCardRepository extends JpaRepository<PaymentCardEntity, UUID>,
         JpaSpecificationExecutor<PaymentCardEntity> {
 
     List<PaymentCardEntity> findAllByUserId(UUID userId);
+
+    Optional<PaymentCardEntity> findByIdAndUserId(UUID id, UUID userId);
 
     List<PaymentCardEntity> findAllByUserIdAndActive(UUID userId, Boolean active);
 

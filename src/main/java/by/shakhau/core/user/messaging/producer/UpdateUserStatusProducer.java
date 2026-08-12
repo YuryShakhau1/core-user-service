@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 public class UpdateUserStatusProducer {
 
     private static final String TOPIC = "user.status.updated";
-    private KafkaTemplate<String, UserStatusUpdatedEvent> template;
+    private final KafkaTemplate<String, UserStatusUpdatedEvent> template;
 
     public void send(UserStatusUpdatedEvent event) {
         try {

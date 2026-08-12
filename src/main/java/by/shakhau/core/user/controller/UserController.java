@@ -1,15 +1,19 @@
 package by.shakhau.core.user.controller;
 
+import by.shakhau.core.user.controller.dto.request.CreateAdminRequest;
 import by.shakhau.core.user.controller.dto.request.CreateUserRequest;
 import by.shakhau.core.user.controller.dto.request.UpdateUserRequest;
 import by.shakhau.core.user.controller.dto.response.UserResponse;
 import by.shakhau.core.user.controller.filter.AuthenticationFilter.UserPrincipal;
 import by.shakhau.core.user.controller.mapper.UserDtoMapper;
 import by.shakhau.core.user.service.UserService;
+import by.shakhau.core.user.service.exception.ResourceForbiddenException;
 import by.shakhau.core.user.service.model.CreatedUser;
 import by.shakhau.core.user.service.model.User;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -37,6 +41,13 @@ public class UserController {
     private final UserDtoMapper mapper;
     private final UserService service;
 
+    private String adminInitSecretHash;
+
+    @Value("${app.admin-init-secret}")
+    public void setAdminInitSecret(String adminInitSecret) {
+        this.adminInitSecretHash = DigestUtils.sha256Hex(adminInitSecret);
+    }
+
     @PostMapping(consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<UserResponse> createUser(
             @Valid @RequestBody
@@ -44,6 +55,16 @@ public class UserController {
             @RequestParam
             String role) {
         CreatedUser user = service.createAndRegister(mapper.toUser(request), role);
+        return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toUserResponse(user));
+    }
+
+    @PostMapping(value = "/create-admin", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    public ResponseEntity<UserResponse> createAdmin(@Valid @RequestBody CreateAdminRequest request) {
+        if (!adminInitSecretHash.equals(DigestUtils.sha256Hex(request.getAdminInitSecret()))) {
+            throw new ResourceForbiddenException("Wrong adminInitSecret");
+        }
+
+        CreatedUser user = service.createAndRegister(mapper.toUser(request), "ROLE_ADMIN");
         return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toUserResponse(user));
     }
 

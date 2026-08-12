@@ -48,9 +48,10 @@ public class PaymentCardController {
         return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toPaymentCardResponse(paymentCard));
     }
 
-    @GetMapping(value = "/{id}", produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<PaymentCardResponse> findPaymentCard(@PathVariable UUID id) {
-        PaymentCard paymentCard = service.findById(id);
+    @GetMapping(value = "/{id}/users/{userId}", produces = APPLICATION_JSON_VALUE)
+    public ResponseEntity<PaymentCardResponse> findPaymentCard(
+            @PathVariable UUID id, @PathVariable UUID userId) {
+        PaymentCard paymentCard = service.findByIdAndUserId(id, userId);
         return ResponseEntity.ok(mapper.toPaymentCardResponse(paymentCard));
     }
 
