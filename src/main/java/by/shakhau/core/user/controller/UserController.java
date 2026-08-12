@@ -3,7 +3,7 @@ package by.shakhau.core.user.controller;
 import by.shakhau.core.user.controller.dto.request.CreateUserRequest;
 import by.shakhau.core.user.controller.dto.request.UpdateUserRequest;
 import by.shakhau.core.user.controller.dto.response.UserResponse;
-import by.shakhau.core.user.controller.filter.JwtAuthenticationFilter.UserPrincipal;
+import by.shakhau.core.user.controller.filter.AuthenticationFilter.UserPrincipal;
 import by.shakhau.core.user.controller.mapper.UserDtoMapper;
 import by.shakhau.core.user.service.UserService;
 import by.shakhau.core.user.service.model.CreatedUser;

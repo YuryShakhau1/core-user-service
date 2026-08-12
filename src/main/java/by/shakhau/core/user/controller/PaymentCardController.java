@@ -3,7 +3,7 @@ package by.shakhau.core.user.controller;
 import by.shakhau.core.user.controller.dto.request.CreatePaymentCardRequest;
 import by.shakhau.core.user.controller.dto.request.UpdatePaymentCardRequest;
 import by.shakhau.core.user.controller.dto.response.PaymentCardResponse;
-import by.shakhau.core.user.controller.filter.JwtAuthenticationFilter.UserPrincipal;
+import by.shakhau.core.user.controller.filter.AuthenticationFilter.UserPrincipal;
 import by.shakhau.core.user.controller.mapper.PaymentCardDtoMapper;
 import by.shakhau.core.user.service.PaymentCardService;
 import by.shakhau.core.user.service.UserService;

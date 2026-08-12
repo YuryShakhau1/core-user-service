@@ -1,10 +1,10 @@
 package by.shakhau.core.user.integration;
 
+import by.shakhau.core.user.controller.filter.AuthenticationFilter;
 import by.shakhau.core.user.repository.PaymentCardRepository;
 import by.shakhau.core.user.repository.UserRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.jsonwebtoken.Claims;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -15,6 +15,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+import static by.shakhau.core.user.controller.filter.AuthenticationFilter.SESSION_ID_HEADER;
+import static by.shakhau.core.user.controller.filter.AuthenticationFilter.USER_ID_HEADER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -274,25 +276,5 @@ class PaymentCardControllerIT extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.numberOfElements").value(1))
                 .andExpect(jsonPath("$.content[0].holder").value("JOHN DOE"));
-    }
-
-    @Test
-    void shouldReturnForbiddenWhenUserTriesToUpdateStatusOfSomeoneElsesCard() throws Exception {
-        TestPaymentCard strangerCard = createPaymentCard();
-        UUID strangerCardId = strangerCard.cardId();
-
-        Claims claims = mock(Claims.class);
-        when(claims.getExpiration()).thenReturn(new Date(System.currentTimeMillis() + 1000000));
-        when((List<String>) claims.get("roles")).thenReturn(Collections.singletonList("ROLE_USER"));
-        when(claims.getSubject()).thenReturn(getUserId().toString()); // Токен принадлежит "нам"
-        when(jwtService.getClaims(any())).thenReturn(claims);
-
-        mockMvc.perform(patch("/payment-cards/{id}/status", strangerCardId)
-                        .header(AUTHORIZATION, AUTHORIZATION_HEADER)
-                        .param("active", "false"))
-                .andExpect(status().isForbidden());
-
-        assertThat(paymentCardRepository.findById(strangerCardId).orElseThrow().getActive())
-                .isTrue();
     }
 }

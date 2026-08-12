@@ -27,9 +27,6 @@ spring:
       ack-mode: manual_immediate
       immediate-stop: true
 
-  jwt:
-    public-key: "classpath:certs/public_key.pem"
-
   liquibase:
     change-log: classpath:/db/changelog/db.changelog-master.yml
     enabled: true

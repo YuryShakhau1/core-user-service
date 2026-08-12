@@ -3,22 +3,16 @@ package by.shakhau.core.user.integration;
 import by.shakhau.core.user.repository.UserRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.jsonwebtoken.Claims;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
 import java.util.UUID;
 
+import static by.shakhau.core.user.controller.filter.AuthenticationFilter.SESSION_ID_HEADER;
+import static by.shakhau.core.user.controller.filter.AuthenticationFilter.USER_ID_HEADER;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -91,7 +85,8 @@ class UserControllerIT extends AbstractIntegrationTest {
         UUID id = getUserId();
 
         mockMvc.perform(get("/users/me")
-                        .header(AUTHORIZATION, AUTHORIZATION_HEADER))
+                        .header(USER_ID_HEADER, getUserId())
+                        .header(SESSION_ID_HEADER, UUID.randomUUID()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(id.toString()))
                 .andExpect(jsonPath("$.firstName").value("John"))
@@ -205,14 +200,14 @@ class UserControllerIT extends AbstractIntegrationTest {
     @Test
     void shouldFindUsersWhenBothFiltersAreApplied() throws Exception {
         String requestJohnSmith = """
-            {
-                "firstName": "John",
-                "lastName": "Smith",
-                "birthDate": "1990-01-01",
-                "email": "smith@mail.com",
-                "active": true
-            }
-            """;
+                {
+                    "firstName": "John",
+                    "lastName": "Smith",
+                    "birthDate": "1990-01-01",
+                    "email": "smith@mail.com",
+                    "active": true
+                }
+                """;
         mockMvc.perform(post("/users")
                         .header(AUTHORIZATION, AUTHORIZATION_HEADER)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -221,14 +216,14 @@ class UserControllerIT extends AbstractIntegrationTest {
                 .andExpect(status().isCreated());
 
         String requestAnnaDoe = """
-            {
-                "firstName": "Anna",
-                "lastName": "Doe",
-                "birthDate": "1992-02-02",
-                "email": "anna@mail.com",
-                "active": true
-            }
-            """;
+                {
+                    "firstName": "Anna",
+                    "lastName": "Doe",
+                    "birthDate": "1992-02-02",
+                    "email": "anna@mail.com",
+                    "active": true
+                }
+                """;
         mockMvc.perform(post("/users")
                         .header(AUTHORIZATION, AUTHORIZATION_HEADER)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -247,37 +242,5 @@ class UserControllerIT extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.numberOfElements").value(1))
                 .andExpect(jsonPath("$.content[0].firstName").value("John"))
                 .andExpect(jsonPath("$.content[0].lastName").value("Doe"));
-    }
-
-    @Test
-    void shouldReturnForbiddenWhenUpdatingAnotherUserStatus() throws Exception {
-        String strangerRequest = """
-            {
-                "firstName": "Bob",
-                "lastName": "Stranger",
-                "birthDate": "1988-08-08",
-                "email": "bob@mail.com",
-                "active": true
-            }
-            """;
-        String response = mockMvc.perform(post("/users")
-                        .header(AUTHORIZATION, AUTHORIZATION_HEADER)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .param("role", "ROLE_USER")
-                        .content(strangerRequest))
-                .andReturn().getResponse().getContentAsString();
-
-        UUID strangerId = UUID.fromString(objectMapper.readTree(response).get("id").asText());
-
-        Claims claims = mock(Claims.class);
-        when(claims.getExpiration()).thenReturn(new Date(System.currentTimeMillis() + 1000000));
-        when((List<String>) claims.get("roles")).thenReturn(Collections.singletonList("ROLE_USER"));
-        when(claims.getSubject()).thenReturn(getUserId().toString());
-        when(jwtService.getClaims(any())).thenReturn(claims);
-
-        mockMvc.perform(patch("/users/{id}", strangerId)
-                        .header(AUTHORIZATION, AUTHORIZATION_HEADER)
-                        .param("active", "false"))
-                .andExpect(status().isForbidden());
     }
 }

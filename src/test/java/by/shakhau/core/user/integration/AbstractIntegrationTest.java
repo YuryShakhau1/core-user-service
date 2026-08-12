@@ -5,9 +5,7 @@ import by.shakhau.core.user.messaging.producer.UpdateUserProducer;
 import by.shakhau.core.user.messaging.producer.UpdateUserStatusProducer;
 import by.shakhau.core.user.repository.PaymentCardRepository;
 import by.shakhau.core.user.repository.UserRepository;
-import by.shakhau.core.user.service.impl.JwtService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.jsonwebtoken.Claims;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -45,9 +43,6 @@ public abstract class AbstractIntegrationTest {
     protected static final String AUTHORIZATION_HEADER = "Bearer 123";
 
     private UUID userId;
-
-    @MockitoBean
-    protected JwtService jwtService;
 
     @MockitoBean
     private CreateUserProducer createUserProducer;
@@ -96,18 +91,10 @@ public abstract class AbstractIntegrationTest {
 
     @BeforeEach
     public void setUp() throws Exception {
-        Claims claims = mock(Claims.class);
-        when(claims.getExpiration()).thenReturn(new Date(System.currentTimeMillis() + 1000000));
-        when((List<String>) claims.get("roles")).thenReturn(Collections.singletonList("ROLE_ADMIN"));
-        when(jwtService.getClaims(any())).thenReturn(claims);
-        when(claims.getSubject()).thenReturn(UUID.randomUUID().toString());
-
         paymentCardRepository.deleteAll();
         userRepository.deleteAll();
         cacheManager.getCacheNames().forEach(cacheName -> cacheManager.getCache(cacheName).clear());
         userId = createUser();
-
-        when(claims.getSubject()).thenReturn(userId.toString());
     }
 
     @DynamicPropertySource
