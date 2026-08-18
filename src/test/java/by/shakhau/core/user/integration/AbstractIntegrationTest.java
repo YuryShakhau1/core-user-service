@@ -1,6 +1,8 @@
 package by.shakhau.core.user.integration;
 
+import by.shakhau.core.user.messaging.consumer.CreatedUserCredentialsConsumer;
 import by.shakhau.core.user.messaging.producer.CreateUserProducer;
+import by.shakhau.core.user.messaging.producer.DeactivateUserCredentialsProducer;
 import by.shakhau.core.user.messaging.producer.UpdateUserProducer;
 import by.shakhau.core.user.messaging.producer.UpdateUserStatusProducer;
 import by.shakhau.core.user.repository.PaymentCardRepository;
@@ -22,15 +24,8 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
 import java.util.UUID;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -39,6 +34,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Testcontainers
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public abstract class AbstractIntegrationTest {
+
+    public static final String USER_ID = "userId";
 
     private UUID userId;
 
@@ -50,6 +47,12 @@ public abstract class AbstractIntegrationTest {
 
     @MockitoBean
     private UpdateUserStatusProducer updateUserStatusProducer;
+
+    @MockitoBean
+    private DeactivateUserCredentialsProducer deactivateUserCredentialsProducer;
+
+    @MockitoBean
+    private CreatedUserCredentialsConsumer createdUserCredentialsConsumer;
 
     @Autowired
     private MockMvc mockMvc;

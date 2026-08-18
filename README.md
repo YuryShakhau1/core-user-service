@@ -59,8 +59,8 @@ The property file example:
 USER_SERVICE_PORT=8080
 
 USER_SERVICE_DB_NAME=user_db
-USER_SERVICE_DB_USERNAME=Username
-USER_SERVICE_DB_PASSWORD=Password
+USER_SERVICE_DB_USERNAME=db_username
+USER_SERVICE_DB_PASSWORD=db_password
 USER_SERVICE_DB_PORT=5432
 
 KAFKA_HOST_PORT=localhost:9092
@@ -374,7 +374,7 @@ PATCH /users/{id}?active=<true_or_false_user_status>
 
 ### 1. Create new payment cart.
 
-POST /payment-cards/users/{userId}  
+POST /users/payment-cards?userId={userId}  
 `Authorization: Bearer <your_access_token>` with ADMIN role  
 `Content-Type: application/json`  
 
@@ -402,7 +402,7 @@ POST /payment-cards/users/{userId}
 
 ### 2. Get payment cards by user id.
 
-GET /payment-cards/users/{userId}?active=<true_or_false_user_status>  
+GET /users/payment-cards?userId={userId}?active=<true_or_false_user_status>  
 `Authorization: Bearer <your_access_token>` with ADMIN role  
 
 `active` - not mandatory payment card status. If absent it returns payment cards with any status
@@ -424,7 +424,7 @@ GET /payment-cards/users/{userId}?active=<true_or_false_user_status>
 
 ### 3. Get current user payment cards.
 
-GET /payment-cards/users/me  
+GET /users/payment-cards/me  
 `Authorization: Bearer <your_access_token>`  
 
 * **Success (200):**
@@ -444,7 +444,7 @@ GET /payment-cards/users/me
 
 ### 4. Get payment card by id.
 
-GET /payment-cards/{id}  
+GET /users/payment-cards/{id}  
 `Authorization: Bearer <your_access_token>`  
 
 `id` - payment card id
@@ -466,7 +466,7 @@ GET /payment-cards/{id}
 
 ### 5. Get payment cards by user first and last name.
 
-GET /payment-cards?firstName=<first_user_name>&lastName=<last_user_name>  
+GET /users/payment-cards?firstName=<first_user_name>&lastName=<last_user_name>  
 `Authorization: Bearer <your_access_token>` with ADMIN role  
 
 `firstName` - first username prefix. Not mandatory.  
@@ -508,7 +508,7 @@ GET /payment-cards?firstName=<first_user_name>&lastName=<last_user_name>
 
 ### 5. Update payment card.
 
-PUT /payment-cards/{id}/users/{userId}  
+PUT /users/payment-cards/{id}/users/{userId}  
 `Authorization: Bearer <your_access_token>` with ADMIN role  
 `Content-Type: application/json`  
 
@@ -538,7 +538,7 @@ PUT /payment-cards/{id}/users/{userId}
 
 ### 6. Update payment card active status.
 
-PATCH /payment-cards/{id}?active=<true_or_false_user_status>  
+PATCH /users/payment-cards/{id}?active=<true_or_false_user_status>  
 `Authorization: Bearer <your_access_token>` with ADMIN role  
 
 `active` - user active status to change.

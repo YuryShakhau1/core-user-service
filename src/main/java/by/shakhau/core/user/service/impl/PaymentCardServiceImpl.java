@@ -79,9 +79,9 @@ public class PaymentCardServiceImpl implements PaymentCardService {
     }
 
     @Override
-    public Page<PaymentCard> findAll(String firstName, String lastName, Pageable pageable) {
-        return repository.findAll(PaymentCardSpecifications.withFilters(firstName, lastName), pageable)
-                .map(u -> mapper.toDomain(u));
+    public Page<PaymentCard> findAll(String firstName, String lastName, Boolean active, Pageable pageable) {
+        return repository.findAll(PaymentCardSpecifications.withFilters(firstName, lastName, active), pageable)
+                .map(mapper::toDomain);
     }
 
     @CachePut(value = "payment-cards", key = "#paymentCard.id")
@@ -115,6 +115,12 @@ public class PaymentCardServiceImpl implements PaymentCardService {
     @Override
     public void updateActiveStatus(UUID userId, UUID id, boolean active) {
         repository.updateActiveStatus(userId, id, active);
+    }
+
+    @Transactional
+    @Override
+    public void delete(UUID userId, UUID id) {
+        repository.deleteByUserIdAndId(userId, id);
     }
 
     private PaymentCard save(UUID userId, PaymentCardEntity paymentCardEntity) {

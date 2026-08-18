@@ -27,4 +27,7 @@ public class UpdatePaymentCardRequest {
     @FutureOrPresent(message = "The card expiration date must be in the future")
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate expirationDate;
+
+    @NotNull(message = "Card active is required")
+    private Boolean active;
 }

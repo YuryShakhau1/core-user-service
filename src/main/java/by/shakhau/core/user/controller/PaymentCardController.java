@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -31,7 +32,7 @@ import java.util.UUID;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
-@RequestMapping("/payment-cards")
+@RequestMapping("/users/payment-cards")
 @RequiredArgsConstructor
 public class PaymentCardController {
 
@@ -39,66 +40,109 @@ public class PaymentCardController {
     private final UserService userService;
     private final PaymentCardService service;
 
-    @PostMapping(value = "/users/{userId}", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    @PostMapping(consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<PaymentCardResponse> createPaymentCard(
-            @PathVariable UUID userId,
+            @RequestParam UUID userId,
             @Valid
             @RequestBody CreatePaymentCardRequest request) {
         PaymentCard paymentCard = service.create(userId, mapper.toPaymentCard(request));
         return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toPaymentCardResponse(paymentCard));
     }
 
-    @GetMapping(value = "/{id}/users/{userId}", produces = APPLICATION_JSON_VALUE)
+    @PostMapping(
+            value = "/me", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    public ResponseEntity<PaymentCardResponse> createCurrentUserPaymentCard(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @Valid
+            @RequestBody CreatePaymentCardRequest request) {
+        PaymentCard paymentCard = service.create(principal.getId(), mapper.toPaymentCard(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toPaymentCardResponse(paymentCard));
+    }
+
+    @GetMapping(value = "/{id}", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<PaymentCardResponse> findPaymentCard(
-            @PathVariable UUID id, @PathVariable UUID userId) {
+            @PathVariable UUID id, @RequestParam UUID userId) {
         PaymentCard paymentCard = service.findByIdAndUserId(id, userId);
         return ResponseEntity.ok(mapper.toPaymentCardResponse(paymentCard));
     }
 
-    @GetMapping(value = "/users/me", produces = APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/me", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<List<PaymentCardResponse>> findCurrentUserPaymentCards(
             @AuthenticationPrincipal UserPrincipal principal,
             @RequestParam(required = false) Boolean active) {
-        UUID userId = principal.getId();
-        List<PaymentCardResponse> paymentCards = service.findByUserId(userId, active).stream()
-                .map(mapper::toPaymentCardResponse)
-                .toList();
-        return ResponseEntity.ok(paymentCards);
-    }
-
-    @GetMapping(value = "/users/{userId}", produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<PaymentCardResponse>> findPaymentCardsByUserId(
-            @PathVariable UUID userId,
-            @RequestParam(required = false) Boolean active) {
-        List<PaymentCardResponse> paymentCards = service.findByUserId(userId, active).stream()
+        List<PaymentCardResponse> paymentCards = service.findByUserId(principal.getId(), active).stream()
                 .map(mapper::toPaymentCardResponse)
                 .toList();
         return ResponseEntity.ok(paymentCards);
     }
 
     @GetMapping(produces = APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<PaymentCardResponse>> findPaymentCardsByUserId(
+            @RequestParam UUID userId,
+            @RequestParam(required = false) Boolean active) {
+        List<PaymentCardResponse> paymentCards = service.findByUserId(userId, active).stream()
+                .map(mapper::toPaymentCardResponse)
+                .toList();
+        return ResponseEntity.ok(paymentCards);
+    }
+
+    @GetMapping(value = "/filtered", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<Page<PaymentCardResponse>> findPaymentCards(
             @RequestParam(required = false) String firstName,
             @RequestParam(required = false) String lastName,
+            @RequestParam(required = false) Boolean active,
             Pageable pageable) {
-        Page<PaymentCard> userPage = service.findAll(firstName, lastName, pageable);
+        Page<PaymentCard> userPage = service.findAll(firstName, lastName, active, pageable);
         return ResponseEntity.ok(userPage.map(mapper::toPaymentCardResponse));
     }
 
-    @PutMapping(value = "/{id}/users/{userId}", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/{id}", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<PaymentCardResponse> updatePaymentCard(
             @PathVariable UUID id,
-            @PathVariable UUID userId,
+            @RequestParam UUID userId,
             @Valid
             @RequestBody UpdatePaymentCardRequest request) {
         PaymentCard paymentCard = service.update(userId, mapper.toPaymentCard(id, request));
         return ResponseEntity.ok(mapper.toPaymentCardResponse(paymentCard));
     }
 
-    @PatchMapping(value = "/{id}/status")
-    public ResponseEntity<Void> updatePaymentCardStatus(@PathVariable UUID id, @RequestParam boolean active) {
+    @PutMapping(value = "/{id}/me", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    public ResponseEntity<PaymentCardResponse> updateCurrentUserPaymentCard(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable UUID id,
+            @Valid
+            @RequestBody UpdatePaymentCardRequest request) {
+        PaymentCard paymentCard = service.update(principal.getId(), mapper.toPaymentCard(id, request));
+        return ResponseEntity.ok(mapper.toPaymentCardResponse(paymentCard));
+    }
+
+    @PatchMapping(value = "/{id}/me")
+    public ResponseEntity<Void> updatePaymentCardStatus(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable UUID id,
+            @RequestParam boolean active) {
+        service.updateActiveStatus(principal.getId(), id, active);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping(value = "/{id}")
+    public ResponseEntity<Void> updateStatus(@PathVariable UUID id, @RequestParam boolean active) {
         UUID userId = userService.findUserIdByCardId(id);
         service.updateActiveStatus(userId, id, active);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping(value = "/{id}")
+    public ResponseEntity<Void> deletePaymentCard(@PathVariable UUID id, @RequestParam UUID userId) {
+        service.delete(userId, id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping(value = "/{id}/me")
+    public ResponseEntity<Void> deleteCurrentUserPaymentCard(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable UUID id) {
+        service.delete(principal.getId(), id);
         return ResponseEntity.noContent().build();
     }
 }

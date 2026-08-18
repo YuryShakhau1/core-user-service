@@ -12,6 +12,7 @@ public interface UserService {
     User create(User user);
     CreatedUser createAndRegister(User user, String role);
     User findById(UUID id);
+    boolean existsById(UUID id);
     UUID findUserIdByCardId(UUID cardId);
     Page<User> findAll(String firstName, String lastName, Pageable pageable);
     User update(User user);

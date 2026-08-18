@@ -6,6 +6,7 @@ import by.shakhau.core.user.controller.dto.response.UserResponse;
 import by.shakhau.core.user.service.model.CreatedUser;
 import by.shakhau.core.user.service.model.User;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
 import java.util.UUID;
@@ -15,6 +16,10 @@ public interface UserDtoMapper {
 
     UserResponse toUserResponse(CreatedUser user);
     UserResponse toUserResponse(User user);
-    User toUser(CreateUserRequest request);
+
+    @Mapping(target = "active", source = "active")
+    User toUser(Boolean active, CreateUserRequest request);
+
+    @Mapping(target = "id", source = "id")
     User toUser(UUID id, UpdateUserRequest request);
 }

@@ -8,19 +8,13 @@ spring:
       hibernate:
         format_sql: true
 
-  data:
-    redis:
-      host: localhost
-      port: 6379
-      password: ${REDIS_SECRET_PASSWORD}
-      entity-ttl: 60
-
   kafka:
     bootstrap-servers: ${KAFKA_HOST_PORT}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
     consumer:
+      auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     listener:
@@ -32,7 +26,19 @@ spring:
     enabled: true
 
   config:
-    import: optional:file:../.env[.properties]
+    import: optional:file:.env[.properties]
 
 app:
   admin-init-secret: ${ADMIN_INIT_SECRET}
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+
+  endpoints:
+    web:
+      exposure:
+        include: health,info

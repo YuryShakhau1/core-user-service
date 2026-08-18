@@ -12,7 +12,8 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class PaymentCardSpecifications {
 
-    public static Specification<PaymentCardEntity> withFilters(String firstName, String lastName) {
+    public static Specification<PaymentCardEntity> withFilters(
+            String firstName, String lastName, Boolean active) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -22,6 +23,10 @@ public class PaymentCardSpecifications {
 
             if (lastName != null && !lastName.isBlank()) {
                 predicates.add(cb.like(cb.lower(root.get("user").get("surname")), lastName.toLowerCase() + "%"));
+            }
+
+            if (active != null) {
+                predicates.add(cb.equal(root.get("active"), active));
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));

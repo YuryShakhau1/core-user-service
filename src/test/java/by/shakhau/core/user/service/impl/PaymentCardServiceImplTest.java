@@ -189,7 +189,7 @@ public class PaymentCardServiceImplTest extends CommonTestUtil {
         when(repository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
         when(mapper.toDomain(paymentCardEntity)).thenReturn(paymentCard);
 
-        Page<PaymentCard> result = service.findAll(USER_FIRST_NAME, USER_FIRST_NAME, pageable);
+        Page<PaymentCard> result = service.findAll(USER_FIRST_NAME, USER_FIRST_NAME, null, pageable);
 
         assertThat(result.getContent()).containsExactly(paymentCard);
     }

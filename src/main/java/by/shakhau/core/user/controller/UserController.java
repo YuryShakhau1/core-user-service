@@ -54,17 +54,19 @@ public class UserController {
             CreateUserRequest request,
             @RequestParam
             String role) {
-        CreatedUser user = service.createAndRegister(mapper.toUser(request), role);
+        request.setEmail(request.getEmail().toLowerCase());
+        CreatedUser user = service.createAndRegister(mapper.toUser(false, request), role);
         return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toUserResponse(user));
     }
 
     @PostMapping(value = "/create-admin", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<UserResponse> createAdmin(@Valid @RequestBody CreateAdminRequest request) {
+        request.setEmail(request.getEmail().toLowerCase());
         if (!adminInitSecretHash.equals(DigestUtils.sha256Hex(request.getAdminInitSecret()))) {
             throw new ResourceForbiddenException("Wrong adminInitSecret");
         }
 
-        CreatedUser user = service.createAndRegister(mapper.toUser(request), "ROLE_ADMIN");
+        CreatedUser user = service.createAndRegister(mapper.toUser(false, request), "ROLE_ADMIN");
         return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toUserResponse(user));
     }
 
@@ -93,6 +95,16 @@ public class UserController {
             @PathVariable UUID id,
             @Valid
             @RequestBody UpdateUserRequest request) {
+        User user = service.update(mapper.toUser(id, request));
+        return ResponseEntity.ok(mapper.toUserResponse(user));
+    }
+
+    @PutMapping(value = "/me", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    public ResponseEntity<UserResponse> updateCurrentUser(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @Valid
+            @RequestBody UpdateUserRequest request) {
+        UUID id = principal.getId();
         User user = service.update(mapper.toUser(id, request));
         return ResponseEntity.ok(mapper.toUserResponse(user));
     }

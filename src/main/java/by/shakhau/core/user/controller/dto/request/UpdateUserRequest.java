@@ -16,9 +16,6 @@ import java.util.UUID;
 @Setter
 public class UpdateUserRequest {
 
-    @NotNull(message = "User id is required")
-    private UUID id;
-
     @NotBlank(message = "User first name is required")
     @Size(min = 1, max = 50, message = "User first name must be between 1 and 50 characters")
     private String firstName;
@@ -36,4 +33,7 @@ public class UpdateUserRequest {
     @Email(message = "Invalid email format")
     @Size(max = 100, message = "Email must not exceed 100 characters")
     private String email;
+
+    @NotNull(message = "User active is required")
+    private Boolean active;
 }

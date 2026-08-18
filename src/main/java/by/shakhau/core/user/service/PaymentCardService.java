@@ -13,7 +13,8 @@ public interface PaymentCardService {
     PaymentCard findByIdAndUserId(UUID id, UUID userId);
     List<UUID> findIndicesByUserId(UUID userId, Boolean active);
     List<PaymentCard> findByUserId(UUID userId, Boolean active);
-    Page<PaymentCard> findAll(String firstName, String lastName, Pageable pageable);
+    Page<PaymentCard> findAll(String firstName, String lastName, Boolean active, Pageable pageable);
     PaymentCard update(UUID userId, PaymentCard paymentCard);
     void updateActiveStatus(UUID userId, UUID id, boolean active);
+    void delete(UUID userId, UUID id);
 }

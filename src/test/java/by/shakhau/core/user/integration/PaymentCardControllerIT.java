@@ -50,8 +50,9 @@ class PaymentCardControllerIT extends AbstractIntegrationTest {
                 """;
 
         String response =
-                mockMvc.perform(post("/payment-cards/users/{userId}", userId)
+                mockMvc.perform(post("/users/payment-cards")
                                 .contentType(MediaType.APPLICATION_JSON)
+                                .param(USER_ID, userId.toString())
                                 .content(request))
                         .andExpect(status().isCreated())
                         .andExpect(jsonPath("$.id").exists())
@@ -75,7 +76,8 @@ class PaymentCardControllerIT extends AbstractIntegrationTest {
         UUID cardId = card.cardId();
         UUID userId = card.userId();
 
-        mockMvc.perform(get("/payment-cards/{id}/users/{userId}", cardId, userId))
+        mockMvc.perform(get("/users/payment-cards/{id}", cardId)
+                        .param(USER_ID, userId.toString()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(cardId.toString()))
                 .andExpect(jsonPath("$.number").value("1234567890123456"))
@@ -84,7 +86,8 @@ class PaymentCardControllerIT extends AbstractIntegrationTest {
 
     @Test
     void shouldReturnNotFoundWhenPaymentCardDoesNotExist() throws Exception {
-        mockMvc.perform(get("/payment-cards/{id}/users/{userId}", UUID.randomUUID(), UUID.randomUUID()))
+        mockMvc.perform(get("/users/payment-cards/{id}", UUID.randomUUID())
+                        .param(USER_ID, UUID.randomUUID().toString()))
                 .andExpect(status().isNotFound());
     }
 
@@ -93,7 +96,8 @@ class PaymentCardControllerIT extends AbstractIntegrationTest {
         TestPaymentCard card = createPaymentCard();
         UUID userId = card.userId();
 
-        mockMvc.perform(get("/payment-cards/users/{userId}", userId)
+        mockMvc.perform(get("/users/payment-cards", userId)
+                        .param(USER_ID, userId.toString())
                         .param("active", "true"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
@@ -104,7 +108,7 @@ class PaymentCardControllerIT extends AbstractIntegrationTest {
     void shouldFindAllPaymentCardsWhenCardsExist() throws Exception {
         createPaymentCard();
 
-        mockMvc.perform(get("/payment-cards")
+        mockMvc.perform(get("/users/payment-cards/filtered")
                         .param("page", "0")
                         .param("size", "10"))
                 .andExpect(status().isOk())
@@ -122,12 +126,14 @@ class PaymentCardControllerIT extends AbstractIntegrationTest {
                 {
                     "number": "9999888877776666",
                     "holder": "PETR PETROV",
-                    "expirationDate": "2035-01-01"
+                    "expirationDate": "2035-01-01",
+                    "active": true
                 }
                 """;
 
-        mockMvc.perform(put("/payment-cards/{id}/users/{userId}", cardId, userId)
+        mockMvc.perform(put("/users/payment-cards/{id}", cardId)
                         .contentType(MediaType.APPLICATION_JSON)
+                        .param(USER_ID, userId.toString())
                         .content(request))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(cardId.toString()))
@@ -147,7 +153,7 @@ class PaymentCardControllerIT extends AbstractIntegrationTest {
         TestPaymentCard card = createPaymentCard();
         UUID cardId = card.cardId();
 
-        mockMvc.perform(patch("/payment-cards/{id}/status", cardId)
+        mockMvc.perform(patch("/users/payment-cards/{id}", cardId)
                         .param("active", "false"))
                 .andExpect(status().isNoContent());
 
@@ -170,8 +176,9 @@ class PaymentCardControllerIT extends AbstractIntegrationTest {
                 }
                 """;
 
-        mockMvc.perform(post("/payment-cards/users/{userId}", userId)
+        mockMvc.perform(post("/users/payment-cards")
                         .contentType(MediaType.APPLICATION_JSON)
+                        .param(USER_ID, userId.toString())
                         .content(request))
                 .andExpect(status().isBadRequest());
     }
@@ -188,7 +195,8 @@ class PaymentCardControllerIT extends AbstractIntegrationTest {
                 }
                 """;
 
-        String response = mockMvc.perform(post("/payment-cards/users/{userId}", userId)
+        String response = mockMvc.perform(post("/users/payment-cards")
+                        .param(USER_ID, userId.toString())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(request))
                 .andExpect(status().isCreated())
@@ -205,27 +213,28 @@ class PaymentCardControllerIT extends AbstractIntegrationTest {
     void shouldFindPaymentCardsWhenBothFirstAndLastNameFiltersAreApplied() throws Exception {
         UUID userJohnDoeId = getUserId();
         String cardJohnDoe = """
-            {
-                "number": "1111222233334444",
-                "holder": "JOHN DOE",
-                "expirationDate": "2230-12-31",
-                "active": true
-            }
-            """;
-        mockMvc.perform(post("/payment-cards/users/{userId}", userJohnDoeId)
+                {
+                    "number": "1111222233334444",
+                    "holder": "JOHN DOE",
+                    "expirationDate": "2230-12-31",
+                    "active": true
+                }
+                """;
+        mockMvc.perform(post("/users/payment-cards")
                         .contentType(MediaType.APPLICATION_JSON)
+                        .param(USER_ID, userJohnDoeId.toString())
                         .content(cardJohnDoe))
                 .andExpect(status().isCreated());
 
         String userJohnSmithRequest = """
-            {
-                "firstName": "John",
-                "lastName": "Smith",
-                "birthDate": "1990-01-01",
-                "email": "smith_card@mail.com",
-                "active": true
-            }
-            """;
+                {
+                    "firstName": "John",
+                    "lastName": "Smith",
+                    "birthDate": "1990-01-01",
+                    "email": "smith_card@mail.com",
+                    "active": true
+                }
+                """;
         String smithResponse = mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .param("role", "ROLE_USER")
@@ -234,18 +243,19 @@ class PaymentCardControllerIT extends AbstractIntegrationTest {
         UUID userJohnSmithId = UUID.fromString(objectMapper.readTree(smithResponse).get("id").asText());
 
         String cardJohnSmith = """
-            {
-                "number": "5555666677778888",
-                "holder": "JOHN SMITH",
-                "expirationDate": "2230-12-31",
-                "active": true
-            }
-            """;
-        mockMvc.perform(post("/payment-cards/users/{userId}", userJohnSmithId)
+                {
+                    "number": "5555666677778888",
+                    "holder": "JOHN SMITH",
+                    "expirationDate": "2230-12-31",
+                    "active": true
+                }
+                """;
+        mockMvc.perform(post("/users/payment-cards")
                 .contentType(MediaType.APPLICATION_JSON)
+                .param(USER_ID, userJohnSmithId.toString())
                 .content(cardJohnSmith));
 
-        mockMvc.perform(get("/payment-cards")
+        mockMvc.perform(get("/users/payment-cards/filtered")
                         .param("firstName", "John")
                         .param("lastName", "Doe")
                         .param("page", "0")

@@ -32,4 +32,8 @@ public interface PaymentCardRepository extends JpaRepository<PaymentCardEntity, 
             value = "UPDATE payment_cards SET active = :active WHERE id = :id AND user_id = :userId",
             nativeQuery = true)
     void updateActiveStatus(UUID userId, UUID id, Boolean active);
+
+    @Modifying
+    @Query(value = "DELETE FROM payment_cards WHERE user_id = :userId AND id = :id", nativeQuery = true)
+    void deleteByUserIdAndId(UUID userId, UUID id);
 }

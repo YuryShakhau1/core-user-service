@@ -38,8 +38,7 @@ class UserControllerIT extends AbstractIntegrationTest {
                     "firstName": "John",
                     "lastName": "Doe",
                     "birthDate": "1995-05-10",
-                    "email": "john@mail.com",
-                    "active": true
+                    "email": "john@mail.com"
                 }
                 """;
 
@@ -54,7 +53,7 @@ class UserControllerIT extends AbstractIntegrationTest {
                         .andExpect(jsonPath("$.lastName").value("Doe"))
                         .andExpect(jsonPath("$.birthDate").value("1995-05-10"))
                         .andExpect(jsonPath("$.email").value("john@mail.com"))
-                        .andExpect(jsonPath("$.active").value(true))
+                        .andExpect(jsonPath("$.active").value(false))
                         .andReturn()
                         .getResponse()
                         .getContentAsString();
@@ -73,7 +72,6 @@ class UserControllerIT extends AbstractIntegrationTest {
                     "lastName": "Doe",
                     "birthDate": "1995-05-10",
                     "email": "john@mail.com",
-                    "active": true,
                     "adminInitSecret": "testAdminInitSecret"
                 }
                 """;
@@ -89,7 +87,7 @@ class UserControllerIT extends AbstractIntegrationTest {
                         .andExpect(jsonPath("$.lastName").value("Doe"))
                         .andExpect(jsonPath("$.birthDate").value("1995-05-10"))
                         .andExpect(jsonPath("$.email").value("john@mail.com"))
-                        .andExpect(jsonPath("$.active").value(true))
+                        .andExpect(jsonPath("$.active").value(false))
                         .andReturn()
                         .getResponse()
                         .getContentAsString();
@@ -108,7 +106,6 @@ class UserControllerIT extends AbstractIntegrationTest {
                     "lastName": "Doe",
                     "birthDate": "1995-05-10",
                     "email": "john@mail.com",
-                    "active": true,
                     "adminInitSecret": "testWrongAdminInitSecret"
                 }
                 """;
@@ -168,13 +165,13 @@ class UserControllerIT extends AbstractIntegrationTest {
 
         String request = """
                 {
-                    "id": "%s",
                     "firstName": "Petr",
                     "lastName": "Petrov",
                     "birthDate": "1990-01-01",
-                    "email": "petr@mail.com"
+                    "email": "petr@mail.com",
+                    "active": false
                 }
-                """.formatted(id);
+                """;
 
         mockMvc.perform(put("/users/{id}", id)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -183,12 +180,12 @@ class UserControllerIT extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.id").value(id.toString()))
                 .andExpect(jsonPath("$.firstName").value("Petr"))
                 .andExpect(jsonPath("$.lastName").value("Petrov"))
-                .andExpect(jsonPath("$.active").value(true));
+                .andExpect(jsonPath("$.active").value(false));
 
         var user = userRepository.findById(id).orElseThrow();
 
         assertThat(user.getName()).isEqualTo("Petr");
-        assertThat(user.getActive()).isTrue();
+        assertThat(user.getActive()).isFalse();
     }
 
     @Test
@@ -213,8 +210,7 @@ class UserControllerIT extends AbstractIntegrationTest {
                     "firstName": "",
                     "lastName": "",
                     "birthDate": null,
-                    "email": "wrong-email",
-                    "active": null
+                    "email": "wrong-email"
                 }
                 """;
 
@@ -249,8 +245,7 @@ class UserControllerIT extends AbstractIntegrationTest {
                     "firstName": "John",
                     "lastName": "Smith",
                     "birthDate": "1990-01-01",
-                    "email": "smith@mail.com",
-                    "active": true
+                    "email": "smith@mail.com"
                 }
                 """;
         mockMvc.perform(post("/users")
@@ -264,8 +259,7 @@ class UserControllerIT extends AbstractIntegrationTest {
                     "firstName": "Anna",
                     "lastName": "Doe",
                     "birthDate": "1992-02-02",
-                    "email": "anna@mail.com",
-                    "active": true
+                    "email": "anna@mail.com"
                 }
                 """;
         mockMvc.perform(post("/users")

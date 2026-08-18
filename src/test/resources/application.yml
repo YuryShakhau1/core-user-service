@@ -1,3 +1,49 @@
 spring:
   profiles:
-    active: test
+    active:
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/${USER_SERVICE_DB_NAME:user_db}
+    username: ${USER_SERVICE_DB_USERNAME:test_user_name}
+    password: ${USER_SERVICE_DB_PASSWORD:test_user_password}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate.ddl-auto: none
+    show-sql: ${SHOW_SQL:false}
+    properties:
+      hibernate:
+        format_sql: true
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: ${REDIS_SECRET_PASSWORD:placeholder_for_local_testing}
+      entity-ttl: 60
+
+  liquibase:
+    change-log: classpath:/db/changelog/db.changelog-master.yml
+    enabled: true
+
+app:
+  admin-init-secret: testAdminInitSecret
+
+crypto:
+  card-secret-key: ${CARD_SECRET_KEY:fF7vJ3wM3zP6qR8sT1uV4xZ6aB9cD2eF3gH6jK9mN1o=}
+
+logging:
+  level:
+    root: DEBUG
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+
+  endpoints:
+    web:
+      exposure:
+        include: health,info

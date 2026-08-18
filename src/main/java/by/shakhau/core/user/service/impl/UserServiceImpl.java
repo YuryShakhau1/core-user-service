@@ -19,6 +19,9 @@ import by.shakhau.core.user.service.model.User;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.text.RandomStringGenerator;
+import org.passay.CharacterRule;
+import org.passay.EnglishCharacterData;
+import org.passay.PasswordGenerator;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
@@ -85,6 +88,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public boolean existsById(UUID id) {
+        return repository.existsById(id);
+    }
+
+    @Override
     public UUID findUserIdByCardId(UUID cardId) {
         return repository.findUserIdByCardId(cardId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found by %s card id".formatted(cardId)));
@@ -130,11 +138,18 @@ public class UserServiceImpl implements UserService {
     }
 
     private StringBuilder generatePassword() {
-        RandomStringGenerator generator = new RandomStringGenerator.Builder()
-                .withinRange('!', '~')
-                .usingRandom(new SecureRandom()::nextInt)
-                .build();
+        var generator = new PasswordGenerator();
 
-        return new StringBuilder(generator.generate(8));
+        CharacterRule uppercaseRule = new CharacterRule(EnglishCharacterData.UpperCase);
+        uppercaseRule.setNumberOfCharacters(2);
+
+        CharacterRule lowercaseRule = new CharacterRule(EnglishCharacterData.LowerCase);
+        lowercaseRule.setNumberOfCharacters(2);
+
+        var digitRule = new CharacterRule(EnglishCharacterData.Digit);
+        digitRule.setNumberOfCharacters(2);
+
+        String password = generator.generatePassword(7, uppercaseRule, lowercaseRule, digitRule);
+        return new StringBuilder(password);
     }
 }

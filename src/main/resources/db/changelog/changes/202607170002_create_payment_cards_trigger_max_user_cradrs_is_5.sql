@@ -1,13 +1,9 @@
--- Counts and rejects for active card only
+-- Counts and rejects for adding more than 5 cards
 CREATE OR REPLACE FUNCTION check_user_card_limit()
 RETURNS TRIGGER AS $$
 DECLARE
 card_count INT;
 BEGIN
-
-    IF NEW.active = false THEN
-        RETURN NEW;
-    END IF;
 
     PERFORM 1
     FROM payment_cards
@@ -17,7 +13,7 @@ BEGIN
     SELECT COUNT(pc.id)
     INTO card_count
     FROM payment_cards pc
-    WHERE pc.user_id = NEW.user_id AND pc.active = true;
+    WHERE pc.user_id = NEW.user_id;
 
     IF card_count >= 5 THEN
             RAISE EXCEPTION 'User with ID % has reached the maximum limit of 5 payment cards', NEW.user_id
