@@ -1,0 +1,36 @@
+server:
+  port: ${USER_SERVICE_PORT}
+
+spring:
+  config:
+    activate:
+      on-profile: local
+
+  datasource:
+    url: jdbc:postgresql://localhost:${USER_SERVICE_DB_PORT}/${USER_SERVICE_DB_NAME}
+    username: ${USER_SERVICE_DB_USERNAME}
+    password: ${USER_SERVICE_DB_PASSWORD}
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: ${REDIS_SECRET_PASSWORD}
+      entity-ttl: 60
+
+  jpa:
+    show-sql: ${SHOW_SQL}
+
+  kafka:
+    producer:
+      properties:
+        max.block.ms: 2000
+        delivery.timeout.ms: 2000
+        request.timeout.ms: 2000
+
+crypto:
+  card-secret-key: ${CARD_SECRET_KEY:fF7vJ3wM3zP6qR8sT1uV4xZ6aB9cD2eF3gH6jK9mN1o=}
+
+logging:
+  level:
+    root: INFO

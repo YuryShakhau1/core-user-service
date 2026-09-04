@@ -1,0 +1,36 @@
+server:
+  port: ${USER_SERVICE_PORT}
+
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+  datasource:
+    url: jdbc:postgresql://${USER_SERVICE_DB_HOST}:${USER_SERVICE_DB_PORT}/${USER_SERVICE_DB_NAME}
+    username: ${USER_SERVICE_DB_USERNAME}
+    password: ${USER_SERVICE_DB_PASSWORD}
+
+  data:
+    redis:
+      host: redis
+      port: 6379
+      password: ${REDIS_SECRET_PASSWORD}
+      entity-ttl: 60
+
+  jpa:
+    show-sql: ${SHOW_SQL:false}
+
+  kafka:
+    producer:
+      properties:
+        max.block.ms: 5000
+        delivery.timeout.ms: 15000
+        request.timeout.ms: 5000
+
+crypto:
+  card-secret-key: ${CARD_SECRET_KEY}
+
+logging:
+  level:
+    root: INFO

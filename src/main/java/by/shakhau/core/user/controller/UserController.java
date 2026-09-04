@@ -1,0 +1,117 @@
+package by.shakhau.core.user.controller;
+
+import by.shakhau.core.user.controller.dto.request.CreateAdminRequest;
+import by.shakhau.core.user.controller.dto.request.CreateUserRequest;
+import by.shakhau.core.user.controller.dto.request.UpdateUserRequest;
+import by.shakhau.core.user.controller.dto.response.UserResponse;
+import by.shakhau.core.user.controller.filter.AuthenticationFilter.UserPrincipal;
+import by.shakhau.core.user.controller.mapper.UserDtoMapper;
+import by.shakhau.core.user.service.UserService;
+import by.shakhau.core.user.service.exception.ResourceForbiddenException;
+import by.shakhau.core.user.service.model.CreatedUser;
+import by.shakhau.core.user.service.model.User;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.UUID;
+
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+
+@RestController
+@RequestMapping("/users")
+@RequiredArgsConstructor
+public class UserController {
+
+    private final UserDtoMapper mapper;
+    private final UserService service;
+
+    private String adminInitSecretHash;
+
+    @Value("${app.admin-init-secret}")
+    public void setAdminInitSecret(String adminInitSecret) {
+        this.adminInitSecretHash = DigestUtils.sha256Hex(adminInitSecret);
+    }
+
+    @PostMapping(consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    public ResponseEntity<UserResponse> createUser(
+            @Valid @RequestBody
+            CreateUserRequest request,
+            @RequestParam
+            String role) {
+        request.setEmail(request.getEmail().toLowerCase());
+        CreatedUser user = service.createAndRegister(mapper.toUser(false, request), role);
+        return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toUserResponse(user));
+    }
+
+    @PostMapping(value = "/create-admin", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    public ResponseEntity<UserResponse> createAdmin(@Valid @RequestBody CreateAdminRequest request) {
+        request.setEmail(request.getEmail().toLowerCase());
+        if (!adminInitSecretHash.equals(DigestUtils.sha256Hex(request.getAdminInitSecret()))) {
+            throw new ResourceForbiddenException("Wrong adminInitSecret");
+        }
+
+        CreatedUser user = service.createAndRegister(mapper.toUser(false, request), "ROLE_ADMIN");
+        return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toUserResponse(user));
+    }
+
+    @GetMapping(value = "/me", produces = APPLICATION_JSON_VALUE)
+    public ResponseEntity<UserResponse> findCurrentUser(@AuthenticationPrincipal UserPrincipal principal) {
+        UUID userId = principal.getId();
+        return ResponseEntity.ok(mapper.toUserResponse(service.findById(userId)));
+    }
+
+    @GetMapping(value = "/{id}", produces = APPLICATION_JSON_VALUE)
+    public ResponseEntity<UserResponse> findUser(@PathVariable UUID id) {
+        return ResponseEntity.ok(mapper.toUserResponse(service.findById(id)));
+    }
+
+    @GetMapping(produces = APPLICATION_JSON_VALUE)
+    public ResponseEntity<Page<UserResponse>> findUsers(
+            @RequestParam(required = false) String firstName,
+            @RequestParam(required = false) String lastName,
+            Pageable pageable) {
+        Page<User> userPage = service.findAll(firstName, lastName, pageable);
+        return ResponseEntity.ok(userPage.map(mapper::toUserResponse));
+    }
+
+    @PutMapping(value = "/{id}", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    public ResponseEntity<UserResponse> updateUser(
+            @PathVariable UUID id,
+            @Valid
+            @RequestBody UpdateUserRequest request) {
+        User user = service.update(mapper.toUser(id, request));
+        return ResponseEntity.ok(mapper.toUserResponse(user));
+    }
+
+    @PutMapping(value = "/me", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    public ResponseEntity<UserResponse> updateCurrentUser(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @Valid
+            @RequestBody UpdateUserRequest request) {
+        UUID id = principal.getId();
+        User user = service.update(mapper.toUser(id, request));
+        return ResponseEntity.ok(mapper.toUserResponse(user));
+    }
+
+    @PatchMapping(value = "/{id}")
+    public ResponseEntity<Void> updateUserStatus(@PathVariable UUID id, @RequestParam Boolean active) {
+        service.updateActiveStatus(id, active);
+        return ResponseEntity.noContent().build();
+    }
+}

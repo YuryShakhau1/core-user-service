@@ -4,6 +4,9 @@ build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
+hs_err_pid**
+replay_pid**
+.env
 
 ### STS ###
 .apt_generated
